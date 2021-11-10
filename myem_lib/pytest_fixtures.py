@@ -30,11 +30,12 @@ def integration_config(load_yml, rabbit_config):
 
 
 @pytest.fixture(scope="module")
-def db_dependency(load_yml, declarative_base):
+def db_dependency(load_yml, request):
     # Do not import testing at the top, otherwise it will create problems with request lib
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
     from nameko.testing.utils import get_extension
+    declarative_base = request.param
 
     class Service:
         name = "db_load_service"
@@ -45,7 +46,6 @@ def db_dependency(load_yml, declarative_base):
         @dummy
         def dummy(self):
             pass
-
 
     service = ServiceContainer(Service)
     provider = get_extension(service, DatabaseSession)
