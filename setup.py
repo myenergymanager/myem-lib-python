@@ -34,7 +34,7 @@ setup(
     },
     entry_points={
         'pytest11': [
-            'myem_lib=myem_lib.testing.pytest_fixtures'
+            'myem_lib=myem_lib.pytest_fixtures'
         ]
     },
     classifiers=[
