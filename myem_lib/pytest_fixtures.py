@@ -35,6 +35,7 @@ def db_dependency(load_yml, request):
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
     from nameko.testing.utils import get_extension
+    # https://stackoverflow.com/questions/18011902/pass-a-parameter-to-a-fixture-function
     declarative_base = request.param
 
     class Service:
