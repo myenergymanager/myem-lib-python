@@ -1,6 +1,5 @@
 import os
 import pytest
-from installer_clients.models import DeclarativeBase
 from nameko.containers import ServiceContainer
 from nameko_sqlalchemy import DatabaseSession, DB_URIS_KEY
 from unittest.mock import Mock
@@ -31,22 +30,23 @@ def integration_config(load_yml, rabbit_config):
 
 
 @pytest.fixture(scope="module")
-def db_dependency(load_yml):
+def db_dependency(load_yml, request):
     # Do not import testing at the top, otherwise it will create problems with request lib
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
     from nameko.testing.utils import get_extension
+    # https://stackoverflow.com/questions/18011902/pass-a-parameter-to-a-fixture-function
+    declarative_base = request.param
 
     class Service:
         name = "db_load_service"
 
-        db = DatabaseSession(DeclarativeBase)
+        db = DatabaseSession(declarative_base)
         from nameko.testing.services import dummy
 
         @dummy
         def dummy(self):
             pass
-
 
     service = ServiceContainer(Service)
     provider = get_extension(service, DatabaseSession)
@@ -55,8 +55,8 @@ def db_dependency(load_yml):
         provider.container.config[DB_URIS_KEY].values()
     )[0]
     provider.setup()
-    DeclarativeBase.metadata.drop_all(provider.engine)
-    DeclarativeBase.metadata.create_all(provider.engine)
+    declarative_base.metadata.drop_all(provider.engine)
+    declarative_base.metadata.create_all(provider.engine)
     yield provider.get_dependency(Mock())
-    DeclarativeBase.metadata.drop_all(provider.engine)
+    declarative_base.metadata.drop_all(provider.engine)
     provider.stop()
