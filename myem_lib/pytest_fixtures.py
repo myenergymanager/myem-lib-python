@@ -24,8 +24,8 @@ def load_yml():
 
 
 @pytest.fixture(scope="function")
-# you need to keep rabbit config to make sure this function is called after rabbit_config
-def integration_config(load_yml, rabbit_config):
+# we override rabbit config to use config yml
+def rabbit_config(load_yml, rabbit_config):
     yield
 
 
