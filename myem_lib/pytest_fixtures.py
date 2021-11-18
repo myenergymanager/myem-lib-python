@@ -1,7 +1,6 @@
 import os
 import pytest
 from nameko.containers import ServiceContainer
-from nameko_sqlalchemy import DatabaseSession, DB_URIS_KEY
 from unittest.mock import Mock
 from nameko.cli import setup_config
 
@@ -41,6 +40,8 @@ def db_dependency_factory(load_yml, request):
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
     from nameko.testing.utils import get_extension
+    # move it here to avoid error if no database
+    from nameko_sqlalchemy import DatabaseSession, DB_URIS_KEY
 
     def make_db_dependency(DeclarativeBase):
         class Service:
