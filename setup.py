@@ -14,14 +14,14 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms="any",
-    install_requires=[
-    ],
+    install_requires=[],
     extras_require={
         "dev": [
             # this depdency should be present in the client, we only used it here for test.
-            "nameko-sqlalchemy==1.5.0"
+            "nameko-sqlalchemy==1.5.0",
             "pytest==6.2.5",
             "pytest-mock==3.6.1",
+            "pyjwt",
             "coverage==4.5.3",
             "flake8==3.7.7",
             "pytest-dotenv",
@@ -30,13 +30,11 @@ setup(
             "pylint==2.9.6",
             "mypy==0.910",
             "typed-ast",
+            "cryptography",
+            "pycryptodome==3.11.0",
         ],
     },
-    entry_points={
-        'pytest11': [
-            'myem_lib=myem_lib.pytest_fixtures'
-        ]
-    },
+    entry_points={"pytest11": ["myem_lib=myem_lib.pytest_fixtures"]},
     classifiers=[
         "Environment :: Web Environment",
         "Intended Audience :: Developers",

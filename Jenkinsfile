@@ -1,0 +1,93 @@
+pipeline{
+    agent any
+    environment{
+           // GEnerate random number between 0 and 1000
+           RABBITMQ_HOST = "${Math.abs(new Random().nextInt(1000+1))}_rabbitmq_myem_lib"
+           DISCORD_WEBHOOK_URL = credentials('discord-webhook')
+    }
+
+    stages{
+
+        stage('Static code analysing') {
+            stages {
+                stage('Install dependencies')
+                {
+                    steps {
+                        sh 'pip3 install --upgrade pipenv'
+                        sh 'pipenv install --pre --dev'
+                    }
+                }
+                stage ('PyDocStyle') {
+                    steps {
+                        sh 'pipenv run pydocstyle --config=.pydocstyle.ini ${MODULE_DIR_NAME}'
+                    }
+                }
+
+                stage ('Mypy') {
+                    steps {
+                        sh 'pipenv run mypy -p myem_lib --config-file mypy.ini --no-incremental'
+                    }
+                }
+
+                stage ('Pylint') {
+                    steps {
+                        sh 'pipenv run pylint myem_lib --output-format=parseable  --rcfile=.pylintrc'
+                    }
+                }
+            }
+        }
+
+        stage('Start Rabbitmq'){
+            steps("launch rabbitmq container"){
+                script{
+                    def inspectExitCode = sh script: "docker container inspect ${RABBITMQ_HOST}", returnStatus: true
+                    if (inspectExitCode == 0) {
+                        echo "container already up"
+                    }
+                    else {
+                        dir('dev_scripts/docker'){
+                            sh "docker run -d --network=traefik_default --name ${RABBITMQ_HOST} rabbitmq:3-management"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Unit-test'){
+            steps('Unit test'){
+                sh "wait-for-it -p 5672 -h ${RABBITMQ_HOST} -t 30 && pipenv run coverage run --source=myem_lib -m pytest -v -s --junit-xml=reports/report.xml  --envfile tests/.env.test  tests && pipenv run coverage xml"
+            }
+
+        }
+        stage('build && SonarQube analysis') {
+            environment {
+                scannerHome = tool 'SonarQubeScanner'
+            }
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh "echo $PATH & echo $JAVA_HOME"
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    }
+    post{
+        always{
+            echo "build finished"
+            sh "docker stop ${RABBITMQ_HOST}"
+            junit 'reports/*.xml'
+
+        }
+
+    }
+
+}
