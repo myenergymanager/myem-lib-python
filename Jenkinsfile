@@ -38,7 +38,7 @@ pipeline{
 
         stage('Unit-test'){
             steps('Unit test'){
-                sh "wait-for-it -p 5672 -h ${RABBITMQ_HOST} -t 30 && pipenv run coverage run --source=myem_lib -m pytest -v -s --junit-xml=reports/report.xml  --envfile tests/.env.test  tests && pipenv run coverage xml"
+                sh "pipenv run coverage run --source=myem_lib -m pytest -v -s --junit-xml=reports/report.xml tests && pipenv run coverage xml"
             }
 
         }
