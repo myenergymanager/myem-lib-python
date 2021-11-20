@@ -5,22 +5,16 @@ from myem_lib.utils import TokenDecoder
 
 
 class TestTokenDecoder:
-    def test_decode_jwt_token(self, generate_keys, generate_token, monkeypatch):
-        monkeypatch.setattr(
-            TokenDecoder, "get_public_key", lambda url, token: generate_keys["public_key"]
-        )
+    def test_decode_jwt_token(self, generate_token):
         assert TokenDecoder.decode_jwt_token(url="", token=generate_token).keys().__contains__("id")
 
-    def test_decode_jwt_token_invalid_token(self, generate_keys, generate_token, monkeypatch):
-        monkeypatch.setattr(
-            TokenDecoder, "get_public_key", lambda url, token: generate_keys["public_key"]
-        )
+    def test_decode_jwt_token_invalid_token(self, generate_token):
         with pytest.raises(BadRequest):
             TokenDecoder.decode_jwt_token(url="", token=generate_token.split()[1])
 
-    def test_get_public_key_when_not_authorized(self, generate_token):
+    def test_get_public_key_when_not_authorized(self):
         with pytest.raises(Unauthenticated):
-            TokenDecoder.get_public_key(url="", token=generate_token)
+            TokenDecoder.get_public_key(url="", token="")
 
     def test_get_public_key(self):
         url = "https://dev-87evx9ru.auth0.com/.well-known/jwks.json"
