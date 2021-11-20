@@ -4,11 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-lib-py-notification = {editable = true, path="./", extras=["dev"]}
+myem-lib-python = {editable = true, path="./", extras=["dev"]}
 
 
 [packages]
-lib-py-notification = {editable = true, path="./"}
+myem-lib-python = {editable = true, path="./"}
 
 
 [pipenv]
