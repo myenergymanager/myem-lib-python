@@ -2,7 +2,6 @@ pipeline{
     agent any
     environment{
            // GEnerate random number between 0 and 1000
-           RABBITMQ_HOST = "${Math.abs(new Random().nextInt(1000+1))}_rabbitmq_myem_lib"
            DISCORD_WEBHOOK_URL = credentials('discord-webhook')
     }
 
@@ -32,22 +31,6 @@ pipeline{
                 stage ('Pylint') {
                     steps {
                         sh 'pipenv run pylint myem_lib --output-format=parseable  --rcfile=.pylintrc'
-                    }
-                }
-            }
-        }
-
-        stage('Start Rabbitmq'){
-            steps("launch rabbitmq container"){
-                script{
-                    def inspectExitCode = sh script: "docker container inspect ${RABBITMQ_HOST}", returnStatus: true
-                    if (inspectExitCode == 0) {
-                        echo "container already up"
-                    }
-                    else {
-                        dir('dev_scripts/docker'){
-                            sh "docker run -d --network=traefik_default --name ${RABBITMQ_HOST} rabbitmq:3-management"
-                        }
                     }
                 }
             }
@@ -83,7 +66,6 @@ pipeline{
     post{
         always{
             echo "build finished"
-            sh "docker stop ${RABBITMQ_HOST}"
             junit 'reports/*.xml'
 
         }
