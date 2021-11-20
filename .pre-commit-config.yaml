@@ -47,7 +47,7 @@ repos:
         hooks:
             -   id: mypy
                 verbose: true
-                exclude: 'myem_lib/pytest_fixtures|tests|alembic|setup.py'
+                exclude: 'tests|alembic|setup.py'
 
 
     -   repo: local
