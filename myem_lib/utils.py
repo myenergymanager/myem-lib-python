@@ -32,6 +32,9 @@ class HttpEntrypoint(HttpRequestHandler):
         return HttpRequestHandler.response_from_exception(self, exc)
 
 
+http = HttpEntrypoint.decorator
+
+
 class TokenDecoder:
     """Token Decoder Class."""
 
