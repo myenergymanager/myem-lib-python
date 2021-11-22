@@ -8,7 +8,7 @@ import pytest
 from Crypto.PublicKey import RSA
 from nameko.cli import setup_config
 from nameko.containers import ServiceContainer
-from myem_lib.utils import TokenDecoder
+from myem_lib import utils
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -85,27 +85,17 @@ def db_dependency_factory(load_yml, request):
     yield make_db_dependency
 
 
-@pytest.fixture
-def generate_keys(monkeypatch):
+def generate_keys():
     """Generate asymmetric RSA keys."""
     key = RSA.generate(2048)
     private_key = key.exportKey()
     public_key = key.publickey().exportKey()
-    monkeypatch.setattr(TokenDecoder, "get_public_key", lambda url, token: public_key)
+    utils.get_public_key = Mock(return_value=public_key)
     return {"private_key": private_key, "public_key": public_key}
 
 
-@pytest.fixture
-def generate_token(generate_keys):
+def generate_token() -> str:
     """Generate a token."""
     return "bearer " + jwt.encode(
-        {"id": randint(1, 100000)}, generate_keys["private_key"], algorithm="RS256"
-    )
-
-
-@pytest.fixture
-def generate_another_token(generate_keys):
-    """Generate another token."""
-    return "KEY " + jwt.encode(
-        {"id": randint(1, 100000)}, generate_keys["private_key"], algorithm="RS256"
+        {"id": randint(1, 100000)}, generate_keys()["private_key"], algorithm="RS256"
     )
