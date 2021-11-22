@@ -98,7 +98,7 @@ def generate_keys(monkeypatch):
 @pytest.fixture
 def generate_token(generate_keys):
     """Generate a token."""
-    return "KEY " + jwt.encode(
+    return "bearer " + jwt.encode(
         {"id": randint(1, 100000)}, generate_keys["private_key"], algorithm="RS256"
     )
 

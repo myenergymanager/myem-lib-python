@@ -53,7 +53,7 @@ class TokenDecoder:
 
         parts = token.split()
 
-        if len(parts) != 2:
+        if len(parts) != 2 or parts[0].lower() != "bearer":
             raise BadRequest("Authorization header missed")
 
         token = parts[1]

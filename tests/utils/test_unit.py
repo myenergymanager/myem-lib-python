@@ -8,6 +8,10 @@ class TestTokenDecoder:
     def test_decode_jwt_token(self, generate_token):
         assert TokenDecoder.decode_jwt_token(url="", token=generate_token).keys().__contains__("id")
 
+    def test_decode_when_not_bearer_token(self, generate_token):
+        with pytest.raises(BadRequest):
+            TokenDecoder.decode_jwt_token(url="", token="KEY" + generate_token.split()[1])
+
     def test_decode_jwt_token_invalid_token(self, generate_token):
         with pytest.raises(BadRequest):
             TokenDecoder.decode_jwt_token(url="", token=generate_token.split()[1])
