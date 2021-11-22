@@ -39,7 +39,7 @@ http = HttpEntrypoint.decorator
 def get_public_key(token: str) -> Any:
     """Returns a public key from a url contains a decoded header and a token."""
     # env var will be loaded from the specific micro service.
-    url = os.getenv("PUBLIC_KEY_URL")
+    url = os.getenv("PUBLIC_KEY_URL", "INVALID")
     try:
         jwk_client = PyJWKClient(url)
         return jwk_client.get_signing_key_from_jwt(token).key
