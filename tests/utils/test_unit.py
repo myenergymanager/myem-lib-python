@@ -13,7 +13,7 @@ class TestTokenDecoder:
     url = "https://webservice.staging.telso.myem.fr/ng-api/authentication/public_key.json"
 
     def test_decode_jwt_token(self):
-        assert decode_jwt_token(token=generate_token()).keys().__contains__("id")
+        assert "id" in decode_jwt_token(token=generate_token()).keys()
 
     def test_decode_when_not_bearer_token(self):
         with pytest.raises(BadRequest):
@@ -44,4 +44,4 @@ class TestTokenDecoder:
                 self.headers = {"Authorization": generate_token()}
 
         request = Requests()
-        assert get_user_from_request_header(request=request).keys().__contains__("id")
+        assert "id" in get_user_from_request_header(request=request).keys()
