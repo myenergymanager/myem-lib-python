@@ -38,7 +38,7 @@ class TestTokenDecoder:
         os.environ["PUBLIC_KEY_URL"] = self.url
         assert isinstance(get_public_key(token=self.token), _RSAPublicKey)
 
-    def test_get_user_from_request_header(self, monkeypatch):
+    def test_get_user_from_request_header(self):
         class Requests:
             def __init__(self):
                 self.headers = {"Authorization": generate_token()}
