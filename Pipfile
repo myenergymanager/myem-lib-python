@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+myem-lib-python = {editable = true, path="./", extras=["dev"]}
+
+
+[packages]
+myem-lib-python = {editable = true, path="./"}
+
+
+[pipenv]
+allow_prereleases = true
+
+[requires]
+python_version = "3.7"
