@@ -96,6 +96,10 @@ def generate_keys():
 
 def generate_token() -> str:
     """Generate a token."""
-    return "bearer " + jwt.encode(
-        {"id": randint(1, 100000)}, generate_keys()["private_key"], algorithm="RS256"
-    )
+    return jwt.encode({"id": randint(1, 100000)}, generate_keys()["private_key"], algorithm="RS256")
+
+
+@pytest.fixture
+def create_token():
+    """Generate token fixture."""
+    return generate_token()
