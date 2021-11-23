@@ -13,11 +13,11 @@ class TestTokenDecoder:
     url = "https://webservice.staging.telso.myem.fr/ng-api/authentication/public_key.json"
 
     def test_decode_jwt_token(self):
-        assert "id" in decode_jwt_token(token=generate_token()).keys()
+        assert "id" in decode_jwt_token(token="bearer " + generate_token()).keys()
 
     def test_decode_when_not_bearer_token(self):
         with pytest.raises(BadRequest):
-            decode_jwt_token(token="KEY" + generate_token().split()[1])
+            decode_jwt_token(token="KEY" + generate_token())
 
     def test_decode_when_not_authorized(self):
         # we disabled mypy error in this line because the token used for this test is too long.
@@ -28,7 +28,7 @@ class TestTokenDecoder:
 
     def test_decode_jwt_token_invalid_token(self):
         with pytest.raises(BadRequest):
-            decode_jwt_token(token=generate_token().split()[1])
+            decode_jwt_token(token=generate_token())
 
     def test_get_public_key_when_not_authenticated(self):
         with pytest.raises(Unauthenticated):
@@ -41,7 +41,7 @@ class TestTokenDecoder:
     def test_get_user_from_request_header(self):
         class Requests:
             def __init__(self):
-                self.headers = {"Authorization": generate_token()}
+                self.headers = {"Authorization": "bearer " + generate_token()}
 
         request = Requests()
         assert "id" in get_user_from_request_header(request=request).keys()
