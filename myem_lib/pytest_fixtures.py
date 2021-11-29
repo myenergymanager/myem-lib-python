@@ -6,9 +6,12 @@ from unittest.mock import Mock
 import jwt
 import pytest
 from Crypto.PublicKey import RSA
+from fastapi.testclient import TestClient
 from nameko.cli import setup_config
 from nameko.containers import ServiceContainer
-from myem_lib import utils
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from myem_lib.utils import app, get_db, get_public_key
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -85,12 +88,15 @@ def db_dependency_factory(load_yml, request):
     yield make_db_dependency
 
 
+client = TestClient(app, raise_server_exceptions=False)
+
+
 def generate_keys():
     """Generate asymmetric RSA keys."""
     key = RSA.generate(2048)
     private_key = key.exportKey()
     public_key = key.publickey().exportKey()
-    utils.get_public_key = Mock(return_value=public_key)
+    app.dependency_overrides[get_public_key] = lambda: public_key
     return {"private_key": private_key, "public_key": public_key}
 
 
@@ -100,6 +106,30 @@ def generate_token() -> str:
 
 
 @pytest.fixture
-def create_token():
+def user_token():
     """Generate token fixture."""
-    return generate_token()
+    yield generate_token()
+
+
+@pytest.fixture(scope="session")
+def create_session():
+    """Create session."""
+    sqlalchemy_testing_url = (
+        f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+        f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+    )
+
+    engine = create_engine(sqlalchemy_testing_url)
+    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    def override_get_db():
+
+        try:
+            db = testing_session_local()
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    return engine
