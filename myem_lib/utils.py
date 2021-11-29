@@ -8,6 +8,8 @@ from jwt import PyJWKClient
 from nameko.web.handlers import HttpRequestHandler
 from werkzeug import Response
 from myem_lib.exceptions import BadRequest, HttpError, Unauthenticated, Unauthorized
+from functools import partial
+from nameko.extensions import register_entrypoint
 
 
 class HttpEntrypoint(HttpRequestHandler):
