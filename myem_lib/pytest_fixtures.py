@@ -125,12 +125,11 @@ def generate_keys():
 
 def generate_token() -> Dict[str, Any]:
     """Generate a token."""
+    keys = generate_keys()
     return {
-        "token": jwt.encode(
-            {"id": randint(1, 100000)}, generate_keys()["private_key"], algorithm="RS256"
-        ),
-        "public_key": generate_keys()["public_key"],
-        "private_key": generate_keys()["private_key"],
+        "token": jwt.encode({"id": randint(1, 100000)}, keys["private_key"], algorithm="RS256"),
+        "public_key": keys["public_key"],
+        "private_key": keys["private_key"],
     }
 
 

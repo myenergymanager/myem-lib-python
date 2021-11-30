@@ -3,21 +3,37 @@ import os
 from typing import Any, Dict
 
 import jwt
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from myem_lib.exceptions import Unauthenticated, Unauthorized
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-engine = create_engine(
-    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
-session = sessionmaker(bind=engine)
+
+def init_app(app: FastAPI) -> None:
+    """Init fast api app."""
+    add_middleware(app)
+    add_validation_exception_handler(app)
+
+
+def add_validation_exception_handler(app: FastAPI) -> None:
+    """Override validation exception_handler."""
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """Override validation_exception_handler."""
+        return JSONResponse(
+            {
+                "errors": [
+                    {element._loc: element.exc.msg_template}  # pylint: disable=W0212
+                    for element in exc.args[0][0].exc.args[0]
+                ]
+            },
+            status_code=422,
+        )
 
 
 def add_middleware(app: FastAPI) -> None:
@@ -39,7 +55,7 @@ def get_public_key(token: str = Depends(oauth2_scheme)) -> Any:
         jwk_client = jwt.PyJWKClient(url)
         return jwk_client.get_signing_key_from_jwt(token).key
     except Exception:
-        raise Unauthenticated("Invalid token") from Exception
+        raise HTTPException(detail="Invalid token", status_code=400) from Exception
 
 
 def get_active_user(
@@ -49,15 +65,6 @@ def get_active_user(
     try:
         decoded_token = jwt.decode(token, public_key, algorithms=["RS256"])
     except Exception:
-        raise Unauthorized("unauthorized !") from Exception
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
     return decoded_token
-
-
-def get_db() -> Any:
-    """Get database instance."""
-    db = session()
-    try:
-        yield db
-    finally:
-        db.close()
