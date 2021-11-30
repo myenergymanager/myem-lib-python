@@ -23,6 +23,7 @@ session = sessionmaker(bind=engine)
 
 app = FastAPI()
 
+router = InferringRouter()
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,8 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-router = InferringRouter()
 
 
 @app.exception_handler(Exception)
@@ -78,6 +77,3 @@ def get_db() -> Any:
         yield db
     finally:
         db.close()
-
-
-app.include_router(router)
