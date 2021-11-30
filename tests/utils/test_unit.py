@@ -14,7 +14,7 @@ class TestTokenDecoder:
 
     def test_decode_when_not_bearer_token(self):
         with pytest.raises(Unauthorized):
-            get_active_user(token="KEY" + generate_token())
+            get_active_user(token="KEY" + generate_token()["token"])
 
     def test_decode_when_not_authorized(self):
         # we disabled mypy error in this line because the token used for this test is too long.
@@ -25,7 +25,7 @@ class TestTokenDecoder:
 
     def test_decode_jwt_token_invalid_token(self):
         with pytest.raises(Unauthorized):
-            get_active_user(token=generate_token())
+            get_active_user(token=generate_token()["token"])
 
     def test_get_public_key_when_not_authenticated(self):
         with pytest.raises(Unauthenticated):

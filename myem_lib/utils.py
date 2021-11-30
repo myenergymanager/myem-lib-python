@@ -3,14 +3,12 @@ import os
 from typing import Any, Dict
 
 import jwt
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
-from fastapi_utils.inferring_router import InferringRouter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from myem_lib.exceptions import HttpError, Unauthenticated, Unauthorized
+from myem_lib.exceptions import Unauthenticated, Unauthorized
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -21,30 +19,16 @@ engine = create_engine(
 )
 session = sessionmaker(bind=engine)
 
-app = FastAPI()
 
-router = InferringRouter()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.exception_handler(Exception)
-async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Http Exception handler."""
-    if isinstance(exc, HttpError):
-        return JSONResponse(
-            content={
-                "errors": exc.args[0],
-            },
-            status_code=exc.status_code,
-        )
-    return JSONResponse(content={"errors": "Internal server error"}, status_code=500)
+def add_middleware(app: FastAPI) -> None:
+    """Added middleware to a fast api application."""
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 def get_public_key(token: str = Depends(oauth2_scheme)) -> Any:
