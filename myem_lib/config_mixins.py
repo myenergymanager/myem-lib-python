@@ -6,13 +6,13 @@ from typing import Optional
 class DbSettingsMixin:
     """Db settings mixin."""
 
-    db_host: Optional["str"] = os.getenv("DB_HOST")
-    db_user: Optional["str"] = os.getenv("DB_USER")
-    db_password: Optional["str"] = os.getenv("DB_PASSWORD")
-    db_name: Optional["str"] = os.getenv("DB_NAME")
+    db_uri: str = (
+        f"postgresql+psycopg2://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}"
+        f"@{os.environ['DB_HOST']}/{os.environ['DB_NAME']}"
+    )
 
 
 class JwtSettingsMixin:
     """Db settings mixin."""
 
-    public_key_url: Optional["str"] = os.getenv("PUBLIC_KEY_URL")
+    public_key_url: Optional["str"] = os.environ["PUBLIC_KEY_URL"]
