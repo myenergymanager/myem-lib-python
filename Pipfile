@@ -8,7 +8,6 @@ myem-lib-python = {editable = true, path="./", extras=["dev"]}
 
 [packages]
 myem-lib-python = {editable = true, path="./"}
-jwcrypto = "*"
 
 [pipenv]
 allow_prereleases = true

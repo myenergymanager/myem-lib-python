@@ -49,17 +49,6 @@ def add_middleware(app: FastAPI) -> None:
     )
 
 
-# def get_public_key(token: str = Depends(oauth2_scheme)) -> Any:
-#     """Returns a public key from a url contains a decoded header and a token."""
-#     # env var will be loaded from the specific micro service.
-#     url = os.environ["PUBLIC_KEY_URL"]
-#     try:
-#         jwk_client = jwt.PyJWKClient(url)
-#         return jwk_client.get_signing_key_from_jwt(token).key
-#     except Exception:
-#         raise HTTPException(detail="Invalid token", status_code=400) from Exception
-
-
 def get_public_key() -> bytes:
     """Returns a public key from a url contains a decoded header and a token."""
     print(requests.get(os.environ["PUBLIC_KEY_URL"]))

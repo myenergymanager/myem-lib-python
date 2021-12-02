@@ -22,6 +22,7 @@ setup(
         "uvicorn==0.15.0",
         "sqlalchemy==1.4.22",
         "psycopg2-binary==2.9.1",
+        "jwcrypto",
     ],
     extras_require={
         "dev": [
