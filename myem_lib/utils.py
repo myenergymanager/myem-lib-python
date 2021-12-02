@@ -1,9 +1,10 @@
 """Utils."""
+import json
 import os
 from typing import Any, Dict
+from urllib.request import urlopen
 
 import jwt
-import requests
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,8 +52,13 @@ def add_middleware(app: FastAPI) -> None:
 
 def get_public_key() -> str:
     """Returns a public key from a url contains a decoded header and a token."""
+    # we used urllib rather than requests because it's has an incompabilities with
+    # fast api or other you can check the same error in this link
+    # https://stackoverflow.com/questions/49820173/requests-recursionerror-maximum-recursion-depth-exceeded
     try:
-        return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem()
+        with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+            header_key = json.loads(f.read())["keys"][0]
+            return JWK(**header_key).export_to_pem()
     except Exception:
         raise HTTPException(detail="Invalid Key", status_code=400) from Exception
 
@@ -60,11 +66,11 @@ def get_public_key() -> str:
 def get_private_key() -> str:
     """Returns a private key from a url contains a decoded header and a token."""
     try:
-        return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem(
-            private_key=True, password=None
-        )
+        with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+            header_key = json.loads(f.read())["keys"][0]
+            return JWK(**header_key).export_to_pem(private_key=True, password=None)
     except Exception:
-        raise HTTPException(detail="Invalid Key", status_code=400) from Exception
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
 
 def get_active_user(token: str = Depends(oauth2_scheme)) -> Dict["str", Any]:
