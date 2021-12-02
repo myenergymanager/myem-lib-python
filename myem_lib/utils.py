@@ -49,16 +49,15 @@ def add_middleware(app: FastAPI) -> None:
     )
 
 
-def get_public_key() -> bytes:
+def get_public_key() -> str:
     """Returns a public key from a url contains a decoded header and a token."""
-    print(requests.get(os.environ["PUBLIC_KEY_URL"]))
     try:
         return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem()
     except Exception:
         raise HTTPException(detail="Invalid Key", status_code=400) from Exception
 
 
-def get_private_key() -> bytes:
+def get_private_key() -> str:
     """Returns a private key from a url contains a decoded header and a token."""
     try:
         return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem(
