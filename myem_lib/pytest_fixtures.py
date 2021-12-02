@@ -1,15 +1,14 @@
 """Builtins Fixtures."""
 import os
 from random import randint
-from typing import Any, Dict
 from unittest.mock import Mock
 
 import jwt
 import pytest
-from Crypto.PublicKey import RSA
 from nameko.cli import setup_config
 from nameko.containers import ServiceContainer
 from sqlalchemy import create_engine
+from myem_lib.utils import get_private_key, get_public_key
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -115,25 +114,11 @@ def nameko_db_dependency_factory(load_yml, request):
     yield make_db_dependency
 
 
-def generate_keys():
-    """Generate asymmetric RSA keys."""
-    key = RSA.generate(2048)
-    private_key = key.exportKey()
-    public_key = key.publickey().exportKey()
-    return {"private_key": private_key, "public_key": public_key}
-
-
-def generate_token() -> Dict[str, Any]:
-    """Generate a token."""
-    keys = generate_keys()
-    return {
-        "token": jwt.encode({"id": randint(1, 100000)}, keys["private_key"], algorithm="RS256"),
-        "public_key": keys["public_key"],
-        "private_key": keys["private_key"],
-    }
-
-
 @pytest.fixture
 def user_token():
     """Generate token fixture."""
-    yield generate_token()
+    yield {
+        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(), algorithm="RS256"),
+        "public_key": get_public_key(),
+        "private_key": get_private_key(),
+    }

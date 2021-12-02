@@ -3,11 +3,13 @@ import os
 from typing import Any, Dict
 
 import jwt
+import requests
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
+from jwcrypto.jwk import JWK
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -47,23 +49,40 @@ def add_middleware(app: FastAPI) -> None:
     )
 
 
-def get_public_key(token: str = Depends(oauth2_scheme)) -> Any:
+# def get_public_key(token: str = Depends(oauth2_scheme)) -> Any:
+#     """Returns a public key from a url contains a decoded header and a token."""
+#     # env var will be loaded from the specific micro service.
+#     url = os.environ["PUBLIC_KEY_URL"]
+#     try:
+#         jwk_client = jwt.PyJWKClient(url)
+#         return jwk_client.get_signing_key_from_jwt(token).key
+#     except Exception:
+#         raise HTTPException(detail="Invalid token", status_code=400) from Exception
+
+
+def get_public_key() -> bytes:
     """Returns a public key from a url contains a decoded header and a token."""
-    # env var will be loaded from the specific micro service.
-    url = os.environ["PUBLIC_KEY_URL"]
+    print(requests.get(os.environ["PUBLIC_KEY_URL"]))
     try:
-        jwk_client = jwt.PyJWKClient(url)
-        return jwk_client.get_signing_key_from_jwt(token).key
+        return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem()
     except Exception:
-        raise HTTPException(detail="Invalid token", status_code=400) from Exception
+        raise HTTPException(detail="Invalid Key", status_code=400) from Exception
 
 
-def get_active_user(
-    token: str = Depends(oauth2_scheme), public_key: str = Depends(get_public_key)
-) -> Dict["str", Any]:
+def get_private_key() -> bytes:
+    """Returns a private key from a url contains a decoded header and a token."""
+    try:
+        return JWK(**requests.get(os.environ["PUBLIC_KEY_URL"]).json()["keys"][0]).export_to_pem(
+            private_key=True, password=None
+        )
+    except Exception:
+        raise HTTPException(detail="Invalid Key", status_code=400) from Exception
+
+
+def get_active_user(token: str = Depends(oauth2_scheme)) -> Dict["str", Any]:
     """Decode a jwt token."""
     try:
-        decoded_token = jwt.decode(token, public_key, algorithms=["RS256"])
+        decoded_token = jwt.decode(token, get_public_key(), algorithms=["RS256"])
     except Exception:
         raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
