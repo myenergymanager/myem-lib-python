@@ -19,8 +19,6 @@ setup(
         "cryptography",
         "pycryptodome==3.11.0",
         "fastapi==0.70.0",
-        "uvicorn==0.15.0",
-        "sqlalchemy==1.4.22",
         "psycopg2-binary==2.9.1",
         "jwcrypto",
     ],
