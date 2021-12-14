@@ -114,7 +114,7 @@ def nameko_db_dependency_factory(load_yml, request):
     yield make_db_dependency
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def user_token():
     """Generate token fixture."""
     yield {
@@ -124,7 +124,7 @@ def user_token():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def user_token_2():
     """Generate token fixture."""
     yield {
