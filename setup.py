@@ -14,7 +14,14 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms="any",
-    install_requires=["pyjwt", "cryptography", "pycryptodome==3.11.0"],
+    install_requires=[
+        "pyjwt",
+        "cryptography",
+        "pycryptodome==3.11.0",
+        "fastapi==0.70.0",
+        "psycopg2-binary==2.9.1",
+        "jwcrypto",
+    ],
     extras_require={
         "dev": [
             # this depdency should be present in the client, we only used it here for test.

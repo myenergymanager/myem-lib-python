@@ -5,10 +5,10 @@ from unittest.mock import Mock
 
 import jwt
 import pytest
-from Crypto.PublicKey import RSA
 from nameko.cli import setup_config
 from nameko.containers import ServiceContainer
-from myem_lib import utils
+from sqlalchemy import create_engine
+from myem_lib.utils import get_private_key, get_public_key
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -44,7 +44,36 @@ def rabbit_config(load_yml, rabbit_config):
 # So, we decided to use factories as fixture
 # https://docs.pytest.org/en/latest/how-to/fixtures.html#factories-as-fixtures
 @pytest.fixture(scope="module")
-def db_dependency_factory(load_yml, request):
+def db_dependency_factory(request):
+    """Create a database dependency for sqlalchemy tests."""
+    # Do not import testing at the top, otherwise it will create problems with request lib
+    # https://github.com/nameko/nameko/issues/693
+    # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
+    sqlalchemy_testing_url = (
+        f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+        f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+    )
+
+    engine = create_engine(sqlalchemy_testing_url)
+
+    def make_db_dependency(DeclarativeBase):
+        DeclarativeBase.metadata.create_all(bind=engine)
+        # service = ServiceContainer(Service)
+        # provider = get_extension(service, DatabaseSession)
+        # # simulate db uris with the first existing one from yml file.
+        # provider.setup()
+
+        def clean():
+            DeclarativeBase.metadata.drop_all(bind=engine)
+
+        request.addfinalizer(clean)
+        return engine
+
+    yield make_db_dependency
+
+
+@pytest.fixture(scope="module")
+def nameko_db_dependency_factory(load_yml, request):
     """Create a database dependency for sqlalchemy tests."""
     # Do not import testing at the top, otherwise it will create problems with request lib
     # https://github.com/nameko/nameko/issues/693
@@ -85,21 +114,21 @@ def db_dependency_factory(load_yml, request):
     yield make_db_dependency
 
 
-def generate_keys():
-    """Generate asymmetric RSA keys."""
-    key = RSA.generate(2048)
-    private_key = key.exportKey()
-    public_key = key.publickey().exportKey()
-    utils.get_public_key = Mock(return_value=public_key)
-    return {"private_key": private_key, "public_key": public_key}
-
-
-def generate_token() -> str:
-    """Generate a token."""
-    return jwt.encode({"id": randint(1, 100000)}, generate_keys()["private_key"], algorithm="RS256")
+@pytest.fixture
+def user_token():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(), algorithm="RS256"),
+        "public_key": get_public_key(),
+        "private_key": get_private_key(),
+    }
 
 
 @pytest.fixture
-def create_token():
+def user_token_2():
     """Generate token fixture."""
-    return generate_token()
+    yield {
+        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(1), algorithm="RS256"),
+        "public_key": get_public_key(1),
+        "private_key": get_private_key(1),
+    }

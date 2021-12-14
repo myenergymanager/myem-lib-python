@@ -6,10 +6,8 @@ verify_ssl = true
 [dev-packages]
 myem-lib-python = {editable = true, path="./", extras=["dev"]}
 
-
 [packages]
 myem-lib-python = {editable = true, path="./"}
-
 
 [pipenv]
 allow_prereleases = true

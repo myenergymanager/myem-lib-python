@@ -2,125 +2,82 @@
 import json
 import os
 from typing import Any, Dict
+from urllib.request import urlopen
 
 import jwt
-from jwt import PyJWKClient
-from nameko.web.handlers import HttpRequestHandler
-from werkzeug import Response
-from myem_lib.exceptions import BadRequest, HttpError, Unauthenticated, Unauthorized
-from functools import partial
-from nameko.extensions import register_entrypoint
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
+from jwcrypto.jwk import JWK
 
 
-class HttpEntrypoint(HttpRequestHandler):
-    """Control formatting of errors returned from the service by overriding response_from_exception.
-
-    more https://nameko.readthedocs.io/en/stable/built_in_extensions.html#http.
-    """
-
-    def response_from_exception(self, exc: Exception) -> Response:
-        """Response_from_exception."""
-
-        if isinstance(exc, HttpError):
-            response = Response(
-                json.dumps(
-                    {
-                        "errors": exc.args[0],
-                    }
-                ),
-                status=exc.status_code,
-                mimetype="application/json",
-            )
-            return response
-        return HttpRequestHandler.response_from_exception(self, exc)
-
-    def __init__(self, method, url, expected_exceptions=(), **kwargs):
-        super().__init__(method, url, expected_exceptions=expected_exceptions)
-        self.allowed_origin = kwargs.get('origin', ['*'])
-        self.allowed_methods = kwargs.get('methods', ['*'])
-        self.allow_credentials = kwargs.get('credentials', True)
-
-    def handle_request(self, request):
-        self.request = request
-        if request.method == 'OPTIONS':
-            return self.response_from_result(result='')
-        return super().handle_request(request)
-
-    def response_from_result(self, *args, **kwargs):
-        response = super(HttpEntrypoint, self).response_from_result(*args, **kwargs)
-        response.headers.add("Access-Control-Allow-Headers",
-                             self.request.headers.get("Access-Control-Request-Headers"))
-        response.headers.add("Access-Control-Allow-Credentials", str(self.allow_credentials).lower())
-        response.headers.add("Access-Control-Allow-Methods", ",".join(self.allowed_methods))
-        response.headers.add("Access-Control-Allow-Origin", ",".join(self.allowed_origin))
-        return response
-
-    @classmethod
-    def decorator(cls, *args, **kwargs):
-        """
-        We're overriding the decorator classmethod to allow it to register an options
-        route for each standard REST call. This saves us from manually defining OPTIONS
-        routes for each CORs enabled endpoint
-        """
-        def registering_decorator(fn, args, kwargs):
-            instance = cls(*args, **kwargs)
-            register_entrypoint(fn, instance)
-            if instance.method in ('GET', 'POST', 'DELETE', 'PUT', 'PATCH') and \
-                    ('*' in instance.allowed_methods or instance.method in instance.allowed_methods):
-                options_args = ['OPTIONS'] + list(args[1:])
-                options_instance = cls(*options_args, **kwargs)
-                register_entrypoint(fn, options_instance)
-            return fn
-
-        if len(args) == 1 and isinstance(args[0], types.FunctionType):
-            return registering_decorator(args[0], args=(), kwargs={})
-        else:
-            return partial(registering_decorator, args=args, kwargs=kwargs)
-        # more https://github.com/nameko/nameko/issues/309
-        # https://github.com/harel/nameko-cors/edit/master/__init__.py
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-http = HttpEntrypoint.decorator
+def init_app(app: FastAPI) -> None:
+    """Init fast api app."""
+    add_middleware(app)
+    add_validation_exception_handler(app)
 
 
-def get_public_key(token: str) -> Any:
+def add_validation_exception_handler(app: FastAPI) -> None:
+    """Override validation exception_handler."""
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """Override validation_exception_handler."""
+        return JSONResponse(
+            {
+                "errors": [
+                    {element._loc: element.exc.msg_template}  # pylint: disable=W0212
+                    for element in exc.args[0][0].exc.args[0]
+                ]
+            },
+            status_code=422,
+        )
+
+
+def add_middleware(app: FastAPI) -> None:
+    """Added middleware to a fast api application."""
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+def get_public_key(index: int = 0) -> str:
     """Returns a public key from a url contains a decoded header and a token."""
-    # env var will be loaded from the specific micro service.
-    url = os.getenv("PUBLIC_KEY_URL", "INVALID")
+    # we used urllib rather than requests because it's has an incompabilities with
+    # fast api or other you can check the same error in this link
+    # https://stackoverflow.com/questions/49820173/requests-recursionerror-maximum-recursion-depth-exceeded
     try:
-        jwk_client = PyJWKClient(url)
-        return jwk_client.get_signing_key_from_jwt(token).key
+        with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+            header_key = json.loads(f.read())["keys"][index]
+            return JWK(**header_key).export_to_pem()
     except Exception:
-        raise Unauthenticated("Invalid token") from Exception
+        raise HTTPException(detail="Invalid Key", status_code=400) from Exception
 
 
-def decode_jwt_token(token: str) -> Dict[str, Any]:
+def get_private_key(index: int = 0) -> str:
+    """Returns a private key from a url contains a decoded header and a token."""
+    try:
+        with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+            header_key = json.loads(f.read())["keys"][index]
+            return JWK(**header_key).export_to_pem(private_key=True, password=None)
+    except Exception:
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
+
+
+def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict["str", Any]:
     """Decode a jwt token."""
-
-    # the token is split into two parts based on a space character
-    # to separate authorization type from token
-    parts = token.split()
-
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise BadRequest("Authorization header missed")
-
-    token = parts[1]
-
-    public_key = get_public_key(token=token)
-
     try:
-        decoded_token = jwt.decode(token, public_key, algorithms=["RS256"])
+        decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
     except Exception:
-        raise Unauthorized("unauthorized !") from Exception
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
     return decoded_token
-
-
-def get_user_from_request_header(request: Any) -> Dict[str, Any]:
-    """Get user data from a request header."""
-    token = request.headers.get("Authorization", None)
-
-    if not token:
-        raise Unauthenticated("not authenticated !")
-
-    return decode_jwt_token(token=token)
