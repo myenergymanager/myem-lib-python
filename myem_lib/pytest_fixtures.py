@@ -122,3 +122,13 @@ def user_token():
         "public_key": get_public_key(),
         "private_key": get_private_key(),
     }
+
+
+@pytest.fixture
+def user_token_2():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(1), algorithm="RS256"),
+        "public_key": get_public_key(1),
+        "private_key": get_private_key(1),
+    }
