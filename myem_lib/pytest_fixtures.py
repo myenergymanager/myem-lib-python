@@ -2,11 +2,8 @@
 import os
 from random import randint
 from unittest.mock import Mock
-
 import jwt
 import pytest
-from nameko.cli import setup_config
-from nameko.containers import ServiceContainer
 from sqlalchemy import create_engine
 from myem_lib.utils import get_private_key, get_public_key
 
@@ -24,6 +21,7 @@ def override_amqp_api_uri_from_env(request):
 
 @pytest.fixture(scope="session")
 def load_yml():
+    from nameko.cli import setup_config
     """Load config.yml file."""
     with open("config.yml", "rb") as file_stream:
         setup_config(file_stream)
@@ -79,6 +77,8 @@ def nameko_db_dependency_factory(load_yml, request):
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
     from nameko.testing.utils import get_extension
+    from nameko.containers import ServiceContainer
+
 
     # move it here to avoid error if no database
     from nameko_sqlalchemy import DatabaseSession, DB_URIS_KEY
