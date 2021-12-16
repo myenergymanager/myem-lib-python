@@ -28,15 +28,27 @@ def add_validation_exception_handler(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Override validation_exception_handler."""
-        return JSONResponse(
-            {
-                "errors": [
-                    {element._loc: element.exc.msg_template}  # pylint: disable=W0212
-                    for element in exc.args[0][0].exc.args[0]
-                ]
-            },
-            status_code=422,
-        )
+        if len(exc.args[0][0].exc.args)>0:
+            return JSONResponse(
+                {
+                    "errors": [
+                        {element._loc: element.exc.msg_template}  # pylint: disable=W0212
+                        for element in exc.args[0][0].exc.args[0]
+                    ]
+                },
+                status_code=422,
+            )
+        # Specific case with user micro service.
+        else:
+            return JSONResponse(
+                {
+                    "errors": [
+                        {element._loc[1]: element.exc.msg_template}  # pylint: disable=W0212
+                        for element in exc.args[0]
+                    ]
+                },
+                status_code=422,
+            )
 
 
 def add_middleware(app: FastAPI) -> None:
