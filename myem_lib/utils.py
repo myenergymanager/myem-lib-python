@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from jwcrypto.jwk import JWK
-
+from uuid import UUID
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -89,6 +89,17 @@ def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict
     """Decode a jwt token."""
     try:
         decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
+    except Exception:
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
+
+    return decoded_token
+
+
+def get_active_installer(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict["str", Any]:
+    """Decode a jwt token."""
+    try:
+        decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
+        decoded_token['id'] = UUID(decoded_token['id'])
     except Exception:
         raise HTTPException(detail="unauthorized", status_code=401) from Exception
 

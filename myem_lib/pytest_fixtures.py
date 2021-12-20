@@ -6,6 +6,7 @@ import jwt
 import pytest
 from sqlalchemy import create_engine
 from myem_lib.utils import get_private_key, get_public_key
+from uuid import uuid4
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -129,6 +130,26 @@ def user_token_2():
     """Generate token fixture."""
     yield {
         "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(1), algorithm="RS256"),
+        "public_key": get_public_key(1),
+        "private_key": get_private_key(1),
+    }
+
+
+@pytest.fixture(scope="session")
+def installer_token():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": str(uuid4())}, get_private_key(), algorithm="RS256"),
+        "public_key": get_public_key(),
+        "private_key": get_private_key(),
+    }
+
+
+@pytest.fixture(scope="session")
+def installer_token_2():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": str(uuid4())}, get_private_key(1), algorithm="RS256"),
         "public_key": get_public_key(1),
         "private_key": get_private_key(1),
     }
