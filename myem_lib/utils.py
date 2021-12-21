@@ -94,14 +94,3 @@ def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict
         raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
     return decoded_token
-
-
-def get_active_installer(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict["str", Any]:
-    """Decode a jwt token."""
-    try:
-        decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
-        decoded_token["id"] = UUID(decoded_token["id"])
-    except Exception:
-        raise HTTPException(detail="unauthorized", status_code=401) from Exception
-
-    return decoded_token
