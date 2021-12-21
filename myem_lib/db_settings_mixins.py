@@ -1,3 +1,4 @@
+"""DbSettingsMixin."""
 import os
 
 

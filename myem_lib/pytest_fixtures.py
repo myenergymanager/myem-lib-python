@@ -2,6 +2,8 @@
 import os
 from random import randint
 from unittest.mock import Mock
+from uuid import uuid4
+
 import jwt
 import pytest
 from sqlalchemy import create_engine
@@ -21,8 +23,9 @@ def override_amqp_api_uri_from_env(request):
 
 @pytest.fixture(scope="session")
 def load_yml():
-    from nameko.cli import setup_config
     """Load config.yml file."""
+    from nameko.cli import setup_config
+
     with open("config.yml", "rb") as file_stream:
         setup_config(file_stream)
 
@@ -76,9 +79,8 @@ def nameko_db_dependency_factory(load_yml, request):
     # Do not import testing at the top, otherwise it will create problems with request lib
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
-    from nameko.testing.utils import get_extension
     from nameko.containers import ServiceContainer
-
+    from nameko.testing.utils import get_extension
 
     # move it here to avoid error if no database
     from nameko_sqlalchemy import DatabaseSession, DB_URIS_KEY
@@ -129,6 +131,26 @@ def user_token_2():
     """Generate token fixture."""
     yield {
         "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(1), algorithm="RS256"),
+        "public_key": get_public_key(1),
+        "private_key": get_private_key(1),
+    }
+
+
+@pytest.fixture(scope="session")
+def installer_token():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": str(uuid4())}, get_private_key(), algorithm="RS256"),
+        "public_key": get_public_key(),
+        "private_key": get_private_key(),
+    }
+
+
+@pytest.fixture(scope="session")
+def installer_token_2():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode({"id": str(uuid4())}, get_private_key(1), algorithm="RS256"),
         "public_key": get_public_key(1),
         "private_key": get_private_key(1),
     }

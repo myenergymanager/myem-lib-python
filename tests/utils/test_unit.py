@@ -1,6 +1,8 @@
+from uuid import UUID
+
 import pytest
 from fastapi.exceptions import HTTPException
-from myem_lib.utils import get_active_user, get_private_key, get_public_key
+from myem_lib.utils import get_active_installer, get_active_user, get_private_key, get_public_key
 
 
 class TestTokenDecoder:
@@ -24,3 +26,6 @@ class TestTokenDecoder:
     def test_get_active_user_with_different_key(self, user_token, user_token_2):
         with pytest.raises(HTTPException):
             assert "id" in get_active_user(token=user_token["token"], index=1)
+
+    def test_get_installer_uuid(self, installer_token):
+        assert isinstance(get_active_installer(token=installer_token["token"])["id"], UUID)

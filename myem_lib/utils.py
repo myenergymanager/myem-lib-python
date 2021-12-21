@@ -3,6 +3,7 @@ import json
 import os
 from typing import Any, Dict
 from urllib.request import urlopen
+from uuid import UUID
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -28,7 +29,7 @@ def add_validation_exception_handler(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Override validation_exception_handler."""
-        if len(exc.args[0][0].exc.args)>0:
+        if len(exc.args[0][0].exc.args) > 0:
             return JSONResponse(
                 {
                     "errors": [
@@ -89,6 +90,17 @@ def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict
     """Decode a jwt token."""
     try:
         decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
+    except Exception:
+        raise HTTPException(detail="unauthorized", status_code=401) from Exception
+
+    return decoded_token
+
+
+def get_active_installer(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict["str", Any]:
+    """Decode a jwt token."""
+    try:
+        decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
+        decoded_token["id"] = UUID(decoded_token["id"])
     except Exception:
         raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
