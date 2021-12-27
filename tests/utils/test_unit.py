@@ -2,7 +2,7 @@ from uuid import UUID
 
 import pytest
 from fastapi.exceptions import HTTPException
-from myem_lib.utils import get_active_installer, get_active_user, get_private_key, get_public_key
+from myem_lib.utils import get_active_user, get_private_key, get_public_key
 
 
 class TestTokenDecoder:
@@ -27,5 +27,8 @@ class TestTokenDecoder:
         with pytest.raises(HTTPException):
             assert "id" in get_active_user(token=user_token["token"], index=1)
 
-    def test_get_installer_uuid(self, installer_token):
-        assert isinstance(get_active_installer(token=installer_token["token"])["id"], UUID)
+    def test_get_installer_uuid(self, ng_user_token):
+        assert isinstance(get_active_user(token=ng_user_token["token"])["id"], UUID)
+
+    def test_test(self, user_token):
+        assert user_token['token'] == ''

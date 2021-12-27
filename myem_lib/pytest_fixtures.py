@@ -137,7 +137,7 @@ def user_token_2():
 
 
 @pytest.fixture(scope="session")
-def installer_token():
+def ng_user_token():
     """Generate token fixture."""
     yield {
         "token": jwt.encode({"id": str(uuid4())}, get_private_key(), algorithm="RS256"),
@@ -147,7 +147,7 @@ def installer_token():
 
 
 @pytest.fixture(scope="session")
-def installer_token_2():
+def ng_user_token_2():
     """Generate token fixture."""
     yield {
         "token": jwt.encode({"id": str(uuid4())}, get_private_key(1), algorithm="RS256"),
