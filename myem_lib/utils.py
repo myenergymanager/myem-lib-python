@@ -90,6 +90,14 @@ def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict
     """Decode a jwt token."""
     try:
         decoded_token = jwt.decode(token, get_public_key(index), algorithms=["RS256"])
+    except jwt.exceptions.InvalidAudienceError:
+        # fast-api users specify the audience for some reason and that break our decode function
+        # to solve this we will try to decode our token for simple users if it raise an
+        # jwt.exceptions.InvalidAudienceError we decode the token with a specified audience
+        try:
+            decoded_token = jwt.decode(token, get_public_key(index), audience="fastapi-users:auth", algorithms=["RS256"])
+        except Exception:
+            raise HTTPException(detail="unauthorized", status_code=401) from Exception
     except Exception:
         raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
