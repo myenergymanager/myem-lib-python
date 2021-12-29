@@ -3,7 +3,6 @@ import json
 import os
 from typing import Any, Dict
 from urllib.request import urlopen
-from uuid import UUID
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -12,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from jwcrypto.jwk import JWK
+from fastapi_pagination import add_pagination
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -21,6 +21,7 @@ def init_app(app: FastAPI) -> None:
     """Init fast api app."""
     add_middleware(app)
     add_validation_exception_handler(app)
+    add_pagination(app)
 
 
 def add_validation_exception_handler(app: FastAPI) -> None:
