@@ -36,7 +36,7 @@ def add_validation_exception_handler(app: FastAPI) -> None:
                 {
                     "errors": [
                         {
-                            element._loc: element.exc.msg_template  # pylint: disable=W0212
+                            element._loc: str(element.exc)  # pylint: disable=W0212
                             if not isinstance(element.exc, ValidationError)
                             else [
                                 f"{nested_element._loc} {nested_element.exc.msg_template}"  # pylint: disable=W0212
