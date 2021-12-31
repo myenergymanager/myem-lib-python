@@ -28,7 +28,4 @@ class TestTokenDecoder:
             assert "id" in get_active_user(token=user_token["token"], index=1)
 
     def test_get_installer_uuid(self, ng_user_token):
-        assert isinstance(get_active_user(token=ng_user_token["token"])["id"], UUID)
-
-    def test_test(self, user_token):
-        assert user_token['token'] == ''
+        assert UUID(get_active_user(token=ng_user_token["token"])["id"], version=4)

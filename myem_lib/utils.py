@@ -10,8 +10,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
-from jwcrypto.jwk import JWK
 from fastapi_pagination import add_pagination
+from jwcrypto.jwk import JWK
+from pydantic import ValidationError
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -34,7 +35,14 @@ def add_validation_exception_handler(app: FastAPI) -> None:
             return JSONResponse(
                 {
                     "errors": [
-                        {element._loc: element.exc.msg_template}  # pylint: disable=W0212
+                        {
+                            element._loc: element.exc.msg_template  # pylint: disable=W0212
+                            if not isinstance(element.exc, ValidationError)
+                            else [
+                                f"{nested_element._loc} {nested_element.exc.msg_template}"  # pylint: disable=W0212
+                                for nested_element in element.exc.args[0]
+                            ]
+                        }  # pylint: disable=W0212
                         for element in exc.args[0][0].exc.args[0]
                     ]
                 },
@@ -96,7 +104,9 @@ def get_active_user(token: str = Depends(oauth2_scheme), index: int = 0) -> Dict
         # to solve this we will try to decode our token for simple users if it raise an
         # jwt.exceptions.InvalidAudienceError we decode the token with a specified audience
         try:
-            decoded_token = jwt.decode(token, get_public_key(index), audience="fastapi-users:auth", algorithms=["RS256"])
+            decoded_token = jwt.decode(
+                token, get_public_key(index), audience="fastapi-users:auth", algorithms=["RS256"]
+            )
         except Exception:
             raise HTTPException(detail="unauthorized", status_code=401) from Exception
     except Exception:
