@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
+from nameko.exceptions import deserialize_to_instance
 from pydantic import ValidationError
 
 
@@ -23,6 +24,13 @@ def init_app(app: FastAPI) -> None:
     add_middleware(app)
     add_validation_exception_handler(app)
     add_pagination(app)
+
+
+@deserialize_to_instance
+class RPCValidationException(Exception):
+    """RPC Validation Exception."""
+
+    pass
 
 
 def add_validation_exception_handler(app: FastAPI) -> None:
