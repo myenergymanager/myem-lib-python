@@ -8,11 +8,11 @@ import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
 from pydantic import ValidationError
-from fastapi.responses import JSONResponse
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -31,16 +31,20 @@ class RPCValidationException(Exception):
     pass
 
 
-def add_rpc_remote_validation_exception_handler(app: FastAPI, remote_rpc_exc: Type[Exception]) -> None:
+def add_rpc_remote_validation_exception_handler(
+    app: FastAPI, remote_rpc_exc: Type[Exception]
+) -> None:
     """Add rpc remote validation exception_handler."""
+
     @app.exception_handler(remote_rpc_exc)
-    async def http_exception_handler(request, exc):
-        if exc.exc_type == 'RPCValidationException':
-            return JSONResponse({"detail": exc.value},
-                                status_code=status.HTTP_400_BAD_REQUEST)
+    async def http_exception_handler(request: Any, exc: Any) -> JSONResponse:
+        if exc.exc_type == "RPCValidationException":
+            return JSONResponse({"detail": exc.value}, status_code=status.HTTP_400_BAD_REQUEST)
         else:
-            return JSONResponse({"detail": "Erreur interne du serveur"},
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JSONResponse(
+                {"detail": "Erreur interne du serveur"},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 def add_validation_exception_handler(app: FastAPI) -> None:
