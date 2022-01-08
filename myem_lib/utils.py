@@ -12,7 +12,6 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
-from nameko.exceptions import registry
 from pydantic import ValidationError
 
 
@@ -26,23 +25,6 @@ def init_app(app: FastAPI) -> None:
     add_pagination(app)
 
 
-def remote_error(exc_path: Any) -> Any:
-    """Decorator that registers remote exception with matching ``exc_path``.
-
-    to be deserialized to decorated exception instance, rather than.
-
-    wrapped in ``RemoteError``.
-    """
-
-    def wrapper(exc_type: Any) -> Any:
-        """Wrapper."""
-        registry[exc_path] = exc_type
-        return exc_type
-
-    return wrapper
-
-
-@remote_error("remote_service.exceptions.RPCValidationException")
 class RPCValidationException(Exception):
     """RPC Validation Exception."""
 
