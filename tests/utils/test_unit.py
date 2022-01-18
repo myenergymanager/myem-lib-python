@@ -8,6 +8,21 @@ from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 from myem_lib.db_settings_mixins import DbSettingsMixin
 from myem_lib.jwt_settings_mixins import JwtSettingsMixin
+from myem_lib.test_data.equipments import equipments
+from myem_lib.test_data.installation_requests import installation_requests
+from myem_lib.test_data.installer_clients import clients, comments
+from myem_lib.test_data.ui_notifications import notifications
+from myem_lib.test_data.user_management import roles, users
+from myem_lib.test_data.windev_legacy import (
+    addresses,
+    consents,
+    consents_sources,
+    customers,
+    formulas,
+    meter_metrics,
+    meters,
+)
+from myem_lib.test_data.windev_legacy import users as simple_users
 from myem_lib.utils import (
     add_validation_exception_handler,
     get_active_user,
@@ -130,3 +145,121 @@ class TestMixins:
             DbSettingsMixin.db_uri
             == "postgresql+psycopg2://user_test:password_test@host_test/name_test"
         )
+
+
+class TestData:
+    def test_installer_clients_data(self):
+        for client in clients:
+            assert all(key in ["id", "user_id", "installer_id"] for key, item in client.items())
+        for comment in comments:
+            assert all(key in ["id", "client_id", "message"] for key, item in comment.items())
+
+    def test_user_management_data(self):
+        for user in users:
+            assert all(
+                key
+                in [
+                    "id",
+                    "email",
+                    "hashed_password",
+                    "is_active",
+                    "is_superuser",
+                    "is_verified",
+                    "first_name",
+                    "last_name",
+                    "phone",
+                    "address",
+                    "role",
+                ]
+                for key, item in user.items()
+            )
+        for role in roles:
+            assert all(key in ["id", "name", "description"] for key, item in role.items())
+
+    def test_ui_notifications_data(self):
+        for notification in notifications:
+            assert all(
+                key in ["id", "user_id", "title", "content", "status", "redirect_to"]
+                for key, item in notification.items()
+            )
+
+    def test_installation_requests_data(self):
+        for installation_request in installation_requests:
+            assert all(
+                key
+                in [
+                    "id",
+                    "user_id",
+                    "status",
+                    "budget",
+                    "equipment_type",
+                    "equipment_brand",
+                    "equipment_model",
+                    "comment",
+                ]
+                for key, item in installation_request.items()
+            )
+
+    def test_equipments_data(self):
+        for equipment in equipments:
+            assert all(
+                key in ["id", "user_id", "type", "brand", "reference", "installed_at"]
+                for key, item in equipment.items()
+            )
+
+    def test_windev_legacy_data(self):
+        for consent in consents:
+            assert all(
+                key in ["id", "id_meter", "id_consent_source", "revoked_at", "meta_data"]
+                for key, item in consent.items()
+            )
+        for consent_source in consents_sources:
+            assert all(key in ["id", "name"] for key, item in consent_source.items())
+        for meter in meters:
+            assert all(
+                key in ["id", "guid", "name", "customer_id", "created_at", "updated_at"]
+                for key, item in meter.items()
+            )
+        for customer in customers:
+            assert all(
+                key in ["id", "id_formula", "created_at", "updated_at", "id_address"]
+                for key, item in customer.items()
+            )
+        for simple_user in simple_users:
+            assert all(
+                key
+                in [
+                    "id",
+                    "email",
+                    "firstname",
+                    "lastname",
+                    "phone",
+                    "type",
+                    "created_at",
+                    "customer_id",
+                ]
+                for key, item in simple_user.items()
+            )
+        for meter_metric in meter_metrics:
+            assert all(
+                key in ["id", "meter_id", "created_at"] for key, item in meter_metric.items()
+            )
+
+        for address in addresses:
+            assert all(
+                key
+                in [
+                    "id_address",
+                    "street",
+                    "postal_code",
+                    "additional_data",
+                    "city",
+                    "country",
+                    "latitude",
+                    "longitude",
+                ]
+                for key, item in address.items()
+            )
+
+        for formula in formulas:
+            assert all(key in ["id", "title"] for key, item in formula.items())
