@@ -37,6 +37,25 @@ def rabbit_config(load_yml, rabbit_config):
     yield
 
 
+@pytest.fixture()
+def rabbit_config_integration(load_yml, request, rabbit_manager):
+    """Override rabbit config fixture for integration tests."""
+
+    # this fixture will not create a vhost
+
+    from six.moves.urllib.parse import urlparse  # pylint: disable=E0401
+
+    rabbit_amqp_uri = request.config.getoption("RABBIT_AMQP_URI")
+    uri_parts = urlparse(rabbit_amqp_uri)
+    username = uri_parts.username
+
+    amqp_uri = "{uri.scheme}://{uri.netloc}/".format(uri=uri_parts)
+
+    conf = {"AMQP_URI": amqp_uri, "username": username}
+
+    yield conf
+
+
 # for this fixture, we tried different solutions
 # we already tried with parametrize https://docs.pytest.org/en/6.2.x/
 # fixture.html#fixture-parametrize
