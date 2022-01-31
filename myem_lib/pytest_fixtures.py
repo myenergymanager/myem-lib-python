@@ -79,6 +79,7 @@ def db_dependency_factory(request):
     engine = create_engine(sqlalchemy_testing_url)
 
     def make_db_dependency(DeclarativeBase):
+        DeclarativeBase.metadata.drop_all(bind=engine)
         DeclarativeBase.metadata.create_all(bind=engine)
         # service = ServiceContainer(Service)
         # provider = get_extension(service, DatabaseSession)
