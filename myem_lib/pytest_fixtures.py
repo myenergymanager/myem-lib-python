@@ -6,7 +6,6 @@ from uuid import uuid4
 
 import jwt
 import pytest
-from sqlalchemy import create_engine
 from myem_lib.utils import get_private_key, get_public_key
 
 
@@ -66,6 +65,9 @@ def rabbit_config_integration(load_yml, request, rabbit_manager):
 @pytest.fixture(scope="module")
 def db_dependency_factory(request):
     """Create a database dependency for sqlalchemy tests."""
+
+    from sqlalchemy import create_engine
+
     # Do not import testing at the top, otherwise it will create problems with request lib
     # https://github.com/nameko/nameko/issues/693
     # https://github.com/gevent/gevent/issues/1016#issuecomment-328529454
