@@ -162,7 +162,9 @@ def user_token_2():
 def ng_user_token():
     """Generate token fixture."""
     yield {
-        "token": jwt.encode({"id": str(uuid4())}, get_private_key(), algorithm="RS256"),
+        "token": jwt.encode(
+            {"id": str(uuid4()), "role": "installer"}, get_private_key(), algorithm="RS256"
+        ),
         "public_key": get_public_key(),
         "private_key": get_private_key(),
     }
@@ -172,7 +174,33 @@ def ng_user_token():
 def ng_user_token_2():
     """Generate token fixture."""
     yield {
-        "token": jwt.encode({"id": str(uuid4())}, get_private_key(1), algorithm="RS256"),
+        "token": jwt.encode(
+            {"id": str(uuid4()), "role": "installer"}, get_private_key(1), algorithm="RS256"
+        ),
+        "public_key": get_public_key(1),
+        "private_key": get_private_key(1),
+    }
+
+
+@pytest.fixture(scope="session")
+def ng_distributor_token():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode(
+            {"id": str(uuid4()), "role": "distributor"}, get_private_key(), algorithm="RS256"
+        ),
+        "public_key": get_public_key(),
+        "private_key": get_private_key(),
+    }
+
+
+@pytest.fixture(scope="session")
+def ng_distributor_token_2():
+    """Generate token fixture."""
+    yield {
+        "token": jwt.encode(
+            {"id": str(uuid4()), "role": "distributor"}, get_private_key(1), algorithm="RS256"
+        ),
         "public_key": get_public_key(1),
         "private_key": get_private_key(1),
     }
