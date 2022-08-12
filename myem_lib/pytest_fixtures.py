@@ -13,10 +13,12 @@ from myem_lib.utils import get_private_key, get_public_key
 def override_amqp_api_uri_from_env(request):
     """Overwrite rabbitmq_uri from test config of nameko."""
     request.config.option.RABBIT_API_URI = (
-        f'http://guest:guest@{os.environ.get("RABBITMQ_HOST")}:os.environ.get("RABBITMQ_PORT_1", 15672)'
+        f'http://guest:guest@{os.environ.get("RABBITMQ_HOST")}:' \
+        f'{os.environ.get("RABBITMQ_PORT_1", 15672)}'
     )
     request.config.option.RABBIT_AMQP_URI = (
-        f'pyamqp://guest:guest@{os.environ.get("RABBITMQ_HOST")}:os.environ.get("RABBITMQ_PORT_2", 5672)/'
+        f'pyamqp://guest:guest@{os.environ.get("RABBITMQ_HOST")}:' \
+        f'{os.environ.get("RABBITMQ_PORT_2", 5672)}/'
     )
 
 
