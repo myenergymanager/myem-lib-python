@@ -16,7 +16,7 @@ def override_amqp_api_uri_from_env(request):
         f'http://guest:guest@{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT_1")}'
     )
     request.config.option.RABBIT_AMQP_URI = (
-        f'pyamqp://guest:guest@{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT_1")}'
+        f'pyamqp://guest:guest@{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT_2")}'
     )
 
 
