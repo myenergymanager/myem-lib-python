@@ -6,13 +6,13 @@ from urllib.request import urlopen
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
-from pydantic import ValidationError
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -51,36 +51,34 @@ def add_validation_exception_handler(app: FastAPI) -> None:
     """Override validation exception_handler."""
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
         """Override validation_exception_handler."""
-        if len(exc.args[0][0].exc.args) > 0:
-            return JSONResponse(
-                {
-                    "errors": [
-                        {
-                            element._loc: str(element.exc)  # pylint: disable=W0212
-                            if not isinstance(element.exc, ValidationError)
-                            else [
-                                f"{nested_element._loc} {nested_element.exc.msg_template}"  # pylint: disable=W0212
-                                for nested_element in element.exc.args[0]
-                            ]
-                        }  # pylint: disable=W0212
-                        for element in exc.args[0][0].exc.args[0]
-                    ]
-                },
-                status_code=422,
-            )
-        # Specific case with user micro service.
-        else:
-            return JSONResponse(
-                {
-                    "errors": [
-                        {element._loc[1]: element.exc.msg_template}  # pylint: disable=W0212
-                        for element in exc.args[0]
-                    ]
-                },
-                status_code=422,
-            )
+        errors: Any = []
+        for e in exc.errors():
+            new_dict = current = {}
+            existed = False
+            for item in errors:
+                if str(e["loc"][1]) == list(item.keys())[0]:
+                    new_dict = current = item
+                    existed = True
+                    break
+            for i in range(1, len(e["loc"])):
+                if i == len(e["loc"]) - 1:
+                    current[str(e["loc"][i])] = e["msg"]
+                else:
+                    if current.get(str(e["loc"][i])):
+                        current = current[str(e["loc"][i])]
+                    else:
+                        current[str(e["loc"][i])] = {}
+                        current = current[str(e["loc"][i])]
+            if not existed:
+                errors.append(new_dict)
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=jsonable_encoder({"errors": errors}),
+        )
 
 
 def add_middleware(app: FastAPI) -> None:
