@@ -41,7 +41,6 @@ setup(
             "pytest-asyncio>=0.16.0",
             "pylint>=2.9.6",
             "mypy>=0.910",
-            "typed-ast",
         ],
     },
     entry_points={"pytest11": ["myem_lib=myem_lib.pytest_fixtures"]},
