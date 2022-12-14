@@ -7,10 +7,6 @@ from uuid import uuid4
 import jwt
 import pytest
 
-from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
-from myem_lib.nameko_settings_mixins import NetworkClusterRpcClient, BackboneClusterRpcClient, \
-    CustomClusterRpcClient
-
 
 @pytest.fixture(scope="session", autouse=True)
 def override_amqp_api_uri_from_env(request):
@@ -144,6 +140,7 @@ def nameko_db_dependency_factory(load_yml, request):
 @pytest.fixture(scope="session")
 def user_token():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode({"id": randint(1, 100000)}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"),
         "public_key": FastApiSettingsMixin.get_public_key(),
@@ -154,6 +151,7 @@ def user_token():
 @pytest.fixture(scope="session")
 def user_token_2():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode({"id": randint(1, 100000)}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"),
         "public_key": FastApiSettingsMixin.get_public_key(1),
@@ -164,6 +162,7 @@ def user_token_2():
 @pytest.fixture(scope="session")
 def ng_user_token():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode(
             {"id": str(uuid4()), "role": "installer"}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"
@@ -176,6 +175,7 @@ def ng_user_token():
 @pytest.fixture(scope="session")
 def ng_user_token_2():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode(
             {"id": str(uuid4()), "role": "installer"}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"
@@ -188,6 +188,7 @@ def ng_user_token_2():
 @pytest.fixture(scope="session")
 def ng_distributor_token():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode(
             {"id": str(uuid4()), "role": "distributor"}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"
@@ -200,6 +201,7 @@ def ng_distributor_token():
 @pytest.fixture(scope="session")
 def ng_distributor_token_2():
     """Generate token fixture."""
+    from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
     yield {
         "token": jwt.encode(
             {"id": str(uuid4()), "role": "distributor"}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"
@@ -215,6 +217,7 @@ def dummy_func(*args, **kwargs):
 
 @pytest.fixture
 def mock_network_nameko_cluster(monkeypatch):
+    from myem_lib.nameko_settings_mixins import NetworkClusterRpcClient
     def set_mock(*args):
         cluster = MagicMock()
 
@@ -240,6 +243,7 @@ def mock_network_nameko_cluster(monkeypatch):
 
 @pytest.fixture
 def mock_backbone_nameko_cluster(monkeypatch):
+    from myem_lib.nameko_settings_mixins import BackboneClusterRpcClient
     def set_mock(*args):
         cluster = MagicMock()
 
@@ -265,6 +269,8 @@ def mock_backbone_nameko_cluster(monkeypatch):
 
 @pytest.fixture
 def mock_custom_nameko_cluster(monkeypatch):
+    from myem_lib.nameko_settings_mixins import CustomClusterRpcClient
+
     def set_mock(*args):
         cluster = MagicMock()
 
