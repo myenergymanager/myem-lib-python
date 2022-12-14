@@ -1,12 +1,15 @@
 """Builtins Fixtures."""
 import os
 from random import randint
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from uuid import uuid4
 
 import jwt
 import pytest
 from myem_lib.utils import get_private_key, get_public_key
+
+from myem_lib.nameko_settings_mixins import NetworkClusterRpcClient, BackboneClusterRpcClient, \
+    CustomClusterRpcClient
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -204,3 +207,82 @@ def ng_distributor_token_2():
         "public_key": get_public_key(1),
         "private_key": get_private_key(1),
     }
+
+
+def dummy_func(*args, **kwargs):
+    return None
+
+
+@pytest.fixture
+def mock_network_nameko_cluster(monkeypatch):
+    def set_mock(*args):
+        cluster = MagicMock()
+
+        for dict_mock in args:
+            setattr(
+                getattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                ),
+                "return_value",
+                dict_mock["mocked_response"],
+            )
+
+        def __enter__(*args, **kwargs):
+            return cluster
+
+        monkeypatch.setattr(NetworkClusterRpcClient, "__init__", dummy_func)
+        monkeypatch.setattr(NetworkClusterRpcClient, "__enter__", __enter__)
+        monkeypatch.setattr(NetworkClusterRpcClient, "__exit__", dummy_func)
+
+    yield set_mock
+
+
+@pytest.fixture
+def mock_backbone_nameko_cluster(monkeypatch):
+    def set_mock(*args):
+        cluster = MagicMock()
+
+        for dict_mock in args:
+            setattr(
+                getattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                ),
+                "return_value",
+                dict_mock["mocked_response"],
+            )
+
+        def __enter__(*args, **kwargs):
+            return cluster
+
+        monkeypatch.setattr(BackboneClusterRpcClient, "__init__", dummy_func)
+        monkeypatch.setattr(BackboneClusterRpcClient, "__enter__", __enter__)
+        monkeypatch.setattr(BackboneClusterRpcClient, "__exit__", dummy_func)
+
+    yield set_mock
+
+
+@pytest.fixture
+def mock_custom_nameko_cluster(monkeypatch):
+    def set_mock(*args):
+        cluster = MagicMock()
+
+        for dict_mock in args:
+            setattr(
+                getattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                ),
+                "return_value",
+                dict_mock["mocked_response"],
+            )
+
+        def __enter__(*args, **kwargs):
+            return cluster
+
+        monkeypatch.setattr(CustomClusterRpcClient, "__init__", dummy_func)
+        monkeypatch.setattr(CustomClusterRpcClient, "__enter__", __enter__)
+        monkeypatch.setattr(CustomClusterRpcClient, "__exit__", dummy_func)
+
+    yield set_mock

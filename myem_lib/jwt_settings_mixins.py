@@ -1,9 +1,8 @@
 """JwtSettingsMixin."""
 import os
-from typing import Optional
 
 
 class JwtSettingsMixin:
     """Db settings mixin."""
 
-    public_key_url: Optional["str"] = os.environ["PUBLIC_KEY_URL"]
+    public_key_url: str | None = os.environ["PUBLIC_KEY_URL"]
