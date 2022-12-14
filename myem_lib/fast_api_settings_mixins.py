@@ -15,6 +15,10 @@ from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
 
 
+class RPCValidationException(Exception):
+    """RPC Validation Exception."""
+
+
 class FastApiSettingsMixin:
     """FastApi settings mixin."""
 
@@ -26,9 +30,6 @@ class FastApiSettingsMixin:
         cls.add_middleware(app)
         cls.add_validation_exception_handler(app)
         add_pagination(app)
-
-    class RPCValidationException(Exception):
-        """RPC Validation Exception."""
 
     @classmethod
     def add_rpc_remote_validation_exception_handler(

@@ -14,6 +14,9 @@ class Base:
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
 
+DeclarativeBase: Any = declarative_base(cls=Base)
+
+
 engine_options = {
         "pool_pre_ping": True,
         "connect_args": {
@@ -25,6 +28,7 @@ engine_options = {
         },
     }
 
+
 class DbSettingsMixin:
     """Db settings mixin."""
 
@@ -32,7 +36,6 @@ class DbSettingsMixin:
         f"postgresql+psycopg2://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}"
         f"@{os.environ['DB_HOST']}/{os.environ['DB_NAME']}"
     )
-    DeclarativeBase: Any = declarative_base(cls=Base)
 
     engine = create_engine(
         db_uri,
