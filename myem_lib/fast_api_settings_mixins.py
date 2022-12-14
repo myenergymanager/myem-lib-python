@@ -1,6 +1,7 @@
 """FastApiSettingsMixin."""
 import json
-from typing import Any, Dict, Type
+import os
+from typing import Any
 from urllib.request import urlopen
 
 import jwt
@@ -12,10 +13,9 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
-from myem_lib.jwt_settings_mixins import JwtSettingsMixin
 
 
-class FastApiSettingsMixin(JwtSettingsMixin):
+class FastApiSettingsMixin:
     """FastApi settings mixin."""
 
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -32,7 +32,7 @@ class FastApiSettingsMixin(JwtSettingsMixin):
 
     @classmethod
     def add_rpc_remote_validation_exception_handler(
-        cls, app: FastAPI, remote_rpc_exc: Type[Exception]
+        cls, app: FastAPI, remote_rpc_exc: type[Exception]
     ) -> None:
         """Add rpc remote validation exception_handler."""
 
@@ -96,7 +96,7 @@ class FastApiSettingsMixin(JwtSettingsMixin):
         # fast api or other you can check the same error in this link
         # https://stackoverflow.com/questions/49820173/requests-recursionerror-maximum-recursion-depth-exceeded
         try:
-            with urlopen(cls.public_key_url) as f:
+            with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
                 header_key = json.loads(f.read())["keys"][index]
                 return JWK(**header_key).export_to_pem()
         except Exception:
@@ -106,7 +106,7 @@ class FastApiSettingsMixin(JwtSettingsMixin):
     def get_private_key(cls, index: int = 0) -> str:
         """Returns a private key from a url contains a decoded header and a token."""
         try:
-            with urlopen(cls.public_key_url) as f:
+            with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
                 header_key = json.loads(f.read())["keys"][index]
                 return JWK(**header_key).export_to_pem(private_key=True, password=None)
         except Exception:
