@@ -6,8 +6,8 @@ from uuid import uuid4
 
 import jwt
 import pytest
-from myem_lib.utils import get_private_key, get_public_key
 
+from myem_lib.fast_api_settings_mixins import FastApiSettingsMixin
 from myem_lib.nameko_settings_mixins import NetworkClusterRpcClient, BackboneClusterRpcClient, \
     CustomClusterRpcClient
 
@@ -145,9 +145,9 @@ def nameko_db_dependency_factory(load_yml, request):
 def user_token():
     """Generate token fixture."""
     yield {
-        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(), algorithm="RS256"),
-        "public_key": get_public_key(),
-        "private_key": get_private_key(),
+        "token": jwt.encode({"id": randint(1, 100000)}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"),
+        "public_key": FastApiSettingsMixin.get_public_key(),
+        "private_key": FastApiSettingsMixin.get_private_key(),
     }
 
 
@@ -155,9 +155,9 @@ def user_token():
 def user_token_2():
     """Generate token fixture."""
     yield {
-        "token": jwt.encode({"id": randint(1, 100000)}, get_private_key(1), algorithm="RS256"),
-        "public_key": get_public_key(1),
-        "private_key": get_private_key(1),
+        "token": jwt.encode({"id": randint(1, 100000)}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"),
+        "public_key": FastApiSettingsMixin.get_public_key(1),
+        "private_key": FastApiSettingsMixin.get_private_key(1),
     }
 
 
@@ -166,10 +166,10 @@ def ng_user_token():
     """Generate token fixture."""
     yield {
         "token": jwt.encode(
-            {"id": str(uuid4()), "role": "installer"}, get_private_key(), algorithm="RS256"
+            {"id": str(uuid4()), "role": "installer"}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"
         ),
-        "public_key": get_public_key(),
-        "private_key": get_private_key(),
+        "public_key": FastApiSettingsMixin.get_public_key(),
+        "private_key": FastApiSettingsMixin.get_private_key(),
     }
 
 
@@ -178,10 +178,10 @@ def ng_user_token_2():
     """Generate token fixture."""
     yield {
         "token": jwt.encode(
-            {"id": str(uuid4()), "role": "installer"}, get_private_key(1), algorithm="RS256"
+            {"id": str(uuid4()), "role": "installer"}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"
         ),
-        "public_key": get_public_key(1),
-        "private_key": get_private_key(1),
+        "public_key": FastApiSettingsMixin.get_public_key(1),
+        "private_key": FastApiSettingsMixin.get_private_key(1),
     }
 
 
@@ -190,10 +190,10 @@ def ng_distributor_token():
     """Generate token fixture."""
     yield {
         "token": jwt.encode(
-            {"id": str(uuid4()), "role": "distributor"}, get_private_key(), algorithm="RS256"
+            {"id": str(uuid4()), "role": "distributor"}, FastApiSettingsMixin.get_private_key(), algorithm="RS256"
         ),
-        "public_key": get_public_key(),
-        "private_key": get_private_key(),
+        "public_key": FastApiSettingsMixin.get_public_key(),
+        "private_key": FastApiSettingsMixin.get_private_key(),
     }
 
 
@@ -202,10 +202,10 @@ def ng_distributor_token_2():
     """Generate token fixture."""
     yield {
         "token": jwt.encode(
-            {"id": str(uuid4()), "role": "distributor"}, get_private_key(1), algorithm="RS256"
+            {"id": str(uuid4()), "role": "distributor"}, FastApiSettingsMixin.get_private_key(1), algorithm="RS256"
         ),
-        "public_key": get_public_key(1),
-        "private_key": get_private_key(1),
+        "public_key": FastApiSettingsMixin.get_public_key(1),
+        "private_key": FastApiSettingsMixin.get_private_key(1),
     }
 
 
