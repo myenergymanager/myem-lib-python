@@ -14,6 +14,17 @@ class Base:
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
 
+engine_options = {
+        "pool_pre_ping": True,
+        "connect_args": {
+            "connect_timeout": 31536000,
+            "keepalives": 1,
+            "keepalives_idle": 60,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
+    }
+
 class DbSettingsMixin:
     """Db settings mixin."""
 
