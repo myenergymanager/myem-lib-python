@@ -9,10 +9,9 @@ from nameko.standalone.rpc import ClusterRpcClient
 class NamekoSettingsMixin:
     """Nameko settings mixin."""
 
-
     network_rabbitmq_uri = os.environ["RABBITMQ_URI"]
 
-    backbone_rabbitmq_uri = os.environ["BACKBONE_RABBITMQ_URI"]
+    backbone_rabbitmq_uri = os.getenv("BACKBONE_RABBITMQ_URI")
 
     network_cluster_rpc_proxy_config = {
         "serializer": "pickle",
