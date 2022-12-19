@@ -222,14 +222,24 @@ def mock_network_nameko_cluster(monkeypatch):
         cluster = MagicMock()
 
         for dict_mock in args:
-            setattr(
-                getattr(
-                    getattr(cluster, dict_mock["service_name"]),
-                    dict_mock["function_name"],
-                ),
-                "return_value",
-                dict_mock["mocked_response"],
-            )
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
@@ -248,14 +258,24 @@ def mock_backbone_nameko_cluster(monkeypatch):
         cluster = MagicMock()
 
         for dict_mock in args:
-            setattr(
-                getattr(
-                    getattr(cluster, dict_mock["service_name"]),
-                    dict_mock["function_name"],
-                ),
-                "return_value",
-                dict_mock["mocked_response"],
-            )
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
@@ -275,14 +295,24 @@ def mock_custom_nameko_cluster(monkeypatch):
         cluster = MagicMock()
 
         for dict_mock in args:
-            setattr(
-                getattr(
-                    getattr(cluster, dict_mock["service_name"]),
-                    dict_mock["function_name"],
-                ),
-                "return_value",
-                dict_mock["mocked_response"],
-            )
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
