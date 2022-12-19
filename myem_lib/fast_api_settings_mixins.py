@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import add_pagination
 from jwcrypto.jwk import JWK
+from nameko.exceptions import RemoteError
 
 
 class RPCValidationException(Exception):
@@ -33,7 +34,7 @@ class FastApiSettingsMixin:
 
     @classmethod
     def add_rpc_remote_validation_exception_handler(
-        cls, app: FastAPI, remote_rpc_exc: type[Exception]
+        cls, app: FastAPI, remote_rpc_exc: type[Exception] = RemoteError
     ) -> None:
         """Add rpc remote validation exception_handler."""
 
