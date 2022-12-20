@@ -30,6 +30,7 @@ class FastApiSettingsMixin:
         """Init fast api app."""
         cls.add_middleware(app)
         cls.add_validation_exception_handler(app)
+        cls.add_rpc_remote_validation_exception_handler(app)
         add_pagination(app)
 
     @classmethod
