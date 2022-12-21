@@ -14,7 +14,7 @@ class Base:
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
 
-DeclarativeBase: Any = declarative_base(cls=Base)
+DeclarativeBase = declarative_base(cls=Base)
 
 
 engine_options = {
