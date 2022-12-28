@@ -240,6 +240,17 @@ def mock_network_nameko_cluster(monkeypatch):
                     "return_value",
                     dict_mock["mocked_response"],
                 )
+                setattr(
+                    getattr(
+                        getattr(
+                            getattr(cluster, dict_mock["service_name"]),
+                            dict_mock["function_name"],
+                        ),
+                        "call_async",
+                    ),
+                    "return_value",
+                    None,
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
@@ -247,6 +258,8 @@ def mock_network_nameko_cluster(monkeypatch):
         monkeypatch.setattr(NetworkClusterRpcClient, "__init__", dummy_func)
         monkeypatch.setattr(NetworkClusterRpcClient, "__enter__", __enter__)
         monkeypatch.setattr(NetworkClusterRpcClient, "__exit__", dummy_func)
+
+        return cluster
 
     yield set_mock
 
@@ -276,6 +289,17 @@ def mock_backbone_nameko_cluster(monkeypatch):
                     "return_value",
                     dict_mock["mocked_response"],
                 )
+                setattr(
+                    getattr(
+                        getattr(
+                            getattr(cluster, dict_mock["service_name"]),
+                            dict_mock["function_name"],
+                        ),
+                        "call_async",
+                    ),
+                    "return_value",
+                    None,
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
@@ -283,6 +307,8 @@ def mock_backbone_nameko_cluster(monkeypatch):
         monkeypatch.setattr(BackboneClusterRpcClient, "__init__", dummy_func)
         monkeypatch.setattr(BackboneClusterRpcClient, "__enter__", __enter__)
         monkeypatch.setattr(BackboneClusterRpcClient, "__exit__", dummy_func)
+
+        return cluster
 
     yield set_mock
 
@@ -313,6 +339,17 @@ def mock_custom_nameko_cluster(monkeypatch):
                     "return_value",
                     dict_mock["mocked_response"],
                 )
+                setattr(
+                    getattr(
+                        getattr(
+                            getattr(cluster, dict_mock["service_name"]),
+                            dict_mock["function_name"],
+                        ),
+                        "call_async",
+                    ),
+                    "return_value",
+                    None,
+                )
 
         def __enter__(*args, **kwargs):
             return cluster
@@ -320,5 +357,7 @@ def mock_custom_nameko_cluster(monkeypatch):
         monkeypatch.setattr(CustomClusterRpcClient, "__init__", dummy_func)
         monkeypatch.setattr(CustomClusterRpcClient, "__enter__", __enter__)
         monkeypatch.setattr(CustomClusterRpcClient, "__exit__", dummy_func)
+
+        return cluster
 
     yield set_mock
