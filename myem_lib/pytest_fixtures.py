@@ -19,22 +19,6 @@ def override_amqp_api_uri_from_env(request):
     )
 
 
-@pytest.fixture(scope="session")
-def load_yml():
-    """Load config.yml file."""
-    from nameko.cli import setup_config
-
-    with open("config.yml", "rb") as file_stream:
-        setup_config(file_stream)
-
-
-@pytest.fixture(scope="function")
-# we override rabbit config to use config yml
-def rabbit_config(load_yml, rabbit_config):
-    """Override rabbit config fixture to call load_yml fixture."""
-    yield
-
-
 @pytest.fixture()
 def rabbit_config_integration(load_yml, request, rabbit_manager):
     """Override rabbit config fixture for integration tests."""
