@@ -38,6 +38,7 @@ class NetworkClusterRpcClient(ClusterRpcClient):
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
         publisher_options["uri"] = os.environ["RABBITMQ_URI"]
+        publisher_options["serializer"] = "pickle"
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
 
 
@@ -55,6 +56,7 @@ class BackboneClusterRpcClient(ClusterRpcClient):
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
         publisher_options["uri"] = os.environ["BACKBONE_RABBITMQ_URI"]
+        publisher_options["serializer"] = "pickle"
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
 
 
@@ -78,4 +80,5 @@ class CustomClusterRpcClient(ClusterRpcClient):
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
         publisher_options["uri"] = rabbitmq_uri
+        publisher_options["serializer"] = "pickle"
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
