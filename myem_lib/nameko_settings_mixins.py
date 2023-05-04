@@ -2,6 +2,7 @@
 import os
 from typing import Any
 
+from nameko import config
 from nameko.standalone.rpc import ClusterRpcClient
 
 
@@ -37,8 +38,12 @@ class NetworkClusterRpcClient(ClusterRpcClient):
         self, context_data: Any = None, timeout: int | None = 70, **publisher_options: Any
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
+        # serializer in the publisher_options dict is not used when initializing ReplyListener
+        # in order to pass this bug we set by default config["serializer"] to pickle if it's not
+        # already set up
         publisher_options["uri"] = os.environ["RABBITMQ_URI"]
         publisher_options["serializer"] = "pickle"
+        config["serializer"] = config.get("serializer", publisher_options["serializer"])
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
 
 
@@ -57,6 +62,7 @@ class BackboneClusterRpcClient(ClusterRpcClient):
         """An override of Cluster Rpc Client to add config setup."""
         publisher_options["uri"] = os.environ["BACKBONE_RABBITMQ_URI"]
         publisher_options["serializer"] = "pickle"
+        config["serializer"] = config.get("serializer", publisher_options["serializer"])
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
 
 
@@ -81,4 +87,5 @@ class CustomClusterRpcClient(ClusterRpcClient):
         """An override of Cluster Rpc Client to add config setup."""
         publisher_options["uri"] = rabbitmq_uri
         publisher_options["serializer"] = "pickle"
+        config["serializer"] = config.get("serializer", publisher_options["serializer"])
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
