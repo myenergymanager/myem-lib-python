@@ -2,7 +2,6 @@
 import os
 from typing import Any
 
-from nameko import config
 from nameko.standalone.rpc import ClusterRpcClient
 
 
@@ -38,13 +37,8 @@ class NetworkClusterRpcClient(ClusterRpcClient):
         self, context_data: Any = None, timeout: int | None = 70, **publisher_options: Any
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
-        self.old_config = config.data.copy()
-        config.setup(NamekoSettingsMixin.network_cluster_rpc_proxy_config)
+        publisher_options["uri"] = os.environ["RABBITMQ_URI"]
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
-
-    def __exit__(self, tpe, value, traceback):
-        config.setup(self.old_config)
-        super().__exit__(tpe, value, traceback)
 
 
 class BackboneClusterRpcClient(ClusterRpcClient):
@@ -60,13 +54,8 @@ class BackboneClusterRpcClient(ClusterRpcClient):
         self, context_data: Any = None, timeout: int | None = 70, **publisher_options: Any
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
-        self.old_config = config.data.copy()
-        config.setup(NamekoSettingsMixin.backbone_cluster_rpc_proxy_config)
+        publisher_options["uri"] = os.environ["BACKBONE_RABBITMQ_URI"]
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
-
-    def __exit__(self, tpe, value, traceback):
-        config.setup(self.old_config)
-        super().__exit__(tpe, value, traceback)
 
 
 class CustomClusterRpcClient(ClusterRpcClient):
@@ -88,15 +77,5 @@ class CustomClusterRpcClient(ClusterRpcClient):
         **publisher_options: Any
     ) -> None:
         """An override of Cluster Rpc Client to add config setup."""
-        self.old_config = config.data.copy()
-        config.setup(
-            {
-                "serializer": "pickle",
-                "AMQP_URI": rabbitmq_uri,
-            }
-        )
+        publisher_options["uri"] = rabbitmq_uri
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
-
-    def __exit__(self, tpe, value, traceback):
-        config.setup(self.old_config)
-        super().__exit__(tpe, value, traceback)
