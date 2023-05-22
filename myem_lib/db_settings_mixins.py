@@ -46,6 +46,8 @@ class DbSettingsMixin:
             "keepalives_interval": 10,
             "keepalives_count": 5,
         },
+        pool_size=20,
+        max_overflow=0,
         pool_pre_ping=True,
     )
     session_maker = sessionmaker(bind=engine)
