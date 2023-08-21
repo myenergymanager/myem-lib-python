@@ -1,5 +1,6 @@
 """Builtins Fixtures."""
 import os
+from inspect import isfunction
 from random import randint
 from unittest.mock import Mock, MagicMock
 from uuid import uuid4
@@ -218,6 +219,12 @@ def mock_network_nameko_cluster(monkeypatch):
                     "side_effect",
                     dict_mock["mocked_response"],
                 )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                    dict_mock["mocked_response"],
+                )
             else:
                 setattr(
                     getattr(
@@ -265,6 +272,12 @@ def mock_backbone_nameko_cluster(monkeypatch):
                         dict_mock["function_name"],
                     ),
                     "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
                     dict_mock["mocked_response"],
                 )
             else:
@@ -315,6 +328,12 @@ def mock_custom_nameko_cluster(monkeypatch):
                         dict_mock["function_name"],
                     ),
                     "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
                     dict_mock["mocked_response"],
                 )
             else:
