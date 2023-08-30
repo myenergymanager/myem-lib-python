@@ -20,7 +20,6 @@ setup(
         "pycryptodome>=3.11.0",
         "fastapi>=0.70.0",
         "pydantic>=1.8.2",
-        "psycopg2-binary>=2.9.1",
         "nameko>=3.0.0-rc10",
         "jwcrypto",
         "fastapi_pagination>=0.9.1",
