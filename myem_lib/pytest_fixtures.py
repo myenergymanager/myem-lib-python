@@ -9,7 +9,6 @@ import jwt
 import pytest
 
 
-
 @pytest.fixture(scope="session", autouse=True)
 def override_amqp_api_uri_from_env(request):
     """Overwrite rabbitmq_uri from test config of nameko."""
@@ -363,6 +362,57 @@ def mock_custom_nameko_cluster(monkeypatch):
         monkeypatch.setattr(CustomClusterRpcClient, "__init__", dummy_func)
         monkeypatch.setattr(CustomClusterRpcClient, "__enter__", __enter__)
         monkeypatch.setattr(CustomClusterRpcClient, "__exit__", dummy_func)
+
+        return cluster
+
+    yield set_mock
+
+
+@pytest.fixture
+def mock_cluster_rpc_proxy(monkeypatch):
+    from myem_lib import nameko_settings_mixins
+
+    def set_mock(*args):
+        cluster = MagicMock()
+
+        for dict_mock in args:
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
+                setattr(
+                    getattr(
+                        getattr(
+                            getattr(cluster, dict_mock["service_name"]),
+                            dict_mock["function_name"],
+                        ),
+                        "call_async",
+                    ),
+                    "return_value",
+                    None,
+                )
+
+        monkeypatch.setattr(nameko_settings_mixins, "ClusterRpcProxy", cluster)
 
         return cluster
 

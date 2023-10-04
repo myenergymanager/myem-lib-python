@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 from nameko import config
+from nameko.extensions import DependencyProvider
 from nameko.standalone.rpc import ClusterRpcClient
 
 
@@ -89,3 +90,27 @@ class CustomClusterRpcClient(ClusterRpcClient):
         publisher_options["serializer"] = "pickle"
         config["serializer"] = config.get("serializer", publisher_options["serializer"])
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
+
+
+class ClusterRpcProxy(DependencyProvider):
+    def __init__(
+        self, rabbitmq_uri, serializer
+    ):
+        self.rabbitmq_uri = rabbitmq_uri
+        self.serializer = serializer
+
+    def setup(self):
+        self.cluster_rpc_proxy = ClusterRpcClient(uri=self.rabbitmq_uri, serializer=self.serializer)
+        self.cluster_rpc_proxy.reply_listener.start()
+
+    def stop(self):
+        self.cluster_rpc_proxy.stop()
+
+    def kill(self):
+        self.cluster_rpc_proxy.stop()
+
+    def get_dependency(self, worker_ctx):
+        return self.cluster_rpc_proxy.client
+
+    def worker_teardown(self, worker_ctx):
+        self.cluster_rpc_proxy.stop()
