@@ -434,7 +434,7 @@ def load_yml():
 
 
 @pytest.fixture
-def create_container_with_cluster_rpc_proxy_mock(container_factory, monkeypatch):
+def create_container_with_cluster_rpc_proxy_mock(container_factory, monkeypatch, load_yml):
     def set_mock(yaml_path, container, dependency_name, *args):
         load_yml(yaml_path)
         container = container_factory(container)
