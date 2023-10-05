@@ -113,4 +113,4 @@ class ClusterRpcProxy(DependencyProvider):
         return self.cluster_rpc_proxy.client
 
     def worker_teardown(self, worker_ctx):
-        self.cluster_rpc_proxy.stop()
+        pass
