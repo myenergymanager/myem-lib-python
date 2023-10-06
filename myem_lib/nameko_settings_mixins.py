@@ -108,8 +108,10 @@ class CustomClusterRpcClient(ClusterRpcClient):
 
 class ClusterRpcClientDurableQueue(ClusterRpcClient):
     def __init__(
-        self, context_data=None, timeout=None, **publisher_options
+        self, context_data=None, timeout=None, queue_expiration: int | None = 3000, **publisher_options
     ):
+        config["serializer"] = config.get("serializer", publisher_options["serializer"])
+
         self.uuid = str(uuid.uuid4())
 
         exchange = get_rpc_exchange()
@@ -121,7 +123,9 @@ class ClusterRpcClientDurableQueue(ClusterRpcClient):
             queue_name,
             exchange=exchange,
             routing_key=self.uuid,
-            queue_arguments={}  # no expiration time when stops the service delete the queue
+            queue_arguments={
+                'x-expires': queue_expiration
+            } if queue_expiration else {}
         )
 
         self.amqp_uri = publisher_options.pop(
@@ -185,7 +189,7 @@ class ClusterRpcProxy(DependencyProvider):
         self.serializer = serializer
 
     def setup(self):
-        self.cluster_rpc_proxy = ClusterRpcClientDurableQueue(uri=self.rabbitmq_uri, serializer=self.serializer)
+        self.cluster_rpc_proxy = ClusterRpcClientDurableQueue(uri=self.rabbitmq_uri, serializer=self.serializer, queue_expiration=None)
         self.cluster_rpc_proxy.reply_listener.start()
 
     def stop(self):
