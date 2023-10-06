@@ -1,10 +1,24 @@
 """Nameko Settings Mixins."""
+from __future__ import absolute_import
+
 import os
+import uuid
 from typing import Any
 
-from nameko import config
+from kombu.messaging import Queue
+
+from nameko import config, serialization
+from nameko.constants import (
+    AMQP_SSL_CONFIG_KEY, AMQP_URI_CONFIG_KEY, CALL_ID_STACK_CONTEXT_KEY,
+    DEFAULT_AMQP_URI, LOGIN_METHOD_CONFIG_KEY
+)
+from nameko.containers import new_call_id
 from nameko.extensions import DependencyProvider
-from nameko.standalone.rpc import ClusterRpcClient
+from nameko.messaging import encode_to_headers
+from nameko.rpc import (
+    RESTRICTED_PUBLISHER_OPTIONS, RPC_REPLY_QUEUE_TEMPLATE, Client, get_rpc_exchange
+)
+from nameko.standalone.rpc import ClusterRpcClient, ReplyListener
 
 
 class NamekoSettingsMixin:
@@ -92,6 +106,77 @@ class CustomClusterRpcClient(ClusterRpcClient):
         super().__init__(context_data=context_data, timeout=timeout, **publisher_options)
 
 
+class ClusterRpcClientDurableQueue(ClusterRpcClient):
+    def __init__(
+        self, context_data=None, timeout=None, **publisher_options
+    ):
+        self.uuid = str(uuid.uuid4())
+
+        exchange = get_rpc_exchange()
+
+        queue_name = RPC_REPLY_QUEUE_TEMPLATE.format(
+            "standalone_rpc_client", self.uuid
+        )
+        queue = Queue(
+            queue_name,
+            exchange=exchange,
+            routing_key=self.uuid,
+            queue_arguments={}  # no expiration time when stops the service delete the queue
+        )
+
+        self.amqp_uri = publisher_options.pop(
+            'uri', config.get(AMQP_URI_CONFIG_KEY, DEFAULT_AMQP_URI)
+        )
+        self.ssl = publisher_options.pop(
+            'ssl', config.get(AMQP_SSL_CONFIG_KEY)
+        )
+        self.login_method = publisher_options.pop(
+            'login_method', config.get(LOGIN_METHOD_CONFIG_KEY)
+        )
+
+        self.reply_listener = ReplyListener(
+            queue, timeout=timeout, uri=self.amqp_uri, ssl=self.ssl
+        )
+
+        serialization_config = serialization.setup()
+        self.serializer = publisher_options.pop(
+            'serializer', serialization_config.serializer
+        )
+
+        for option in RESTRICTED_PUBLISHER_OPTIONS:
+            publisher_options.pop(option, None)
+
+        publisher = self.publisher_cls(
+            self.amqp_uri,
+            ssl=self.ssl,
+            login_method=self.login_method,
+            exchange=exchange,
+            serializer=self.serializer,
+            declare=[self.reply_listener.queue],
+            reply_to=self.reply_listener.queue.routing_key,
+            **publisher_options
+        )
+
+        context_data = context_data or {}
+
+        def publish(*args, **kwargs):
+
+            context_data[CALL_ID_STACK_CONTEXT_KEY] = [
+                'standalone_rpc_client.{}.{}'.format(self.uuid, new_call_id())
+            ]
+
+            extra_headers = kwargs.pop('extra_headers')
+            extra_headers.update(encode_to_headers(context_data))
+
+            publisher.publish(
+                *args, extra_headers=extra_headers, **kwargs
+            )
+
+        get_reply = self.reply_listener.register_for_reply
+
+        self.client = Client(publish, get_reply, context_data)
+
+
 class ClusterRpcProxy(DependencyProvider):
     def __init__(
         self, rabbitmq_uri, serializer
@@ -100,13 +185,15 @@ class ClusterRpcProxy(DependencyProvider):
         self.serializer = serializer
 
     def setup(self):
-        self.cluster_rpc_proxy = ClusterRpcClient(uri=self.rabbitmq_uri, serializer=self.serializer)
+        self.cluster_rpc_proxy = ClusterRpcClientDurableQueue(uri=self.rabbitmq_uri, serializer=self.serializer)
         self.cluster_rpc_proxy.reply_listener.start()
 
     def stop(self):
+        self.cluster_rpc_proxy.reply_listener.stop()
         self.cluster_rpc_proxy.stop()
 
     def kill(self):
+        self.cluster_rpc_proxy.reply_listener.stop()
         self.cluster_rpc_proxy.stop()
 
     def get_dependency(self, worker_ctx):
