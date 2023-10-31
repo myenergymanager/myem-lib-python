@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import jwt
 import pytest
-
+from nameko.testing.services import replace_dependencies
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -366,4 +366,103 @@ def mock_custom_nameko_cluster(monkeypatch):
 
         return cluster
 
+    yield set_mock
+
+
+@pytest.fixture
+def mock_cluster_rpc_proxy(monkeypatch):
+    from myem_lib import nameko_settings_mixins
+
+    def set_mock(*args):
+        cluster = MagicMock()
+
+        for dict_mock in args:
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
+                setattr(
+                    getattr(
+                        getattr(
+                            getattr(cluster, dict_mock["service_name"]),
+                            dict_mock["function_name"],
+                        ),
+                        "call_async",
+                    ),
+                    "return_value",
+                    None,
+                )
+
+        monkeypatch.setattr(nameko_settings_mixins, "ClusterRpcProxy", cluster)
+
+        return cluster
+
+    yield set_mock
+
+
+@pytest.fixture(scope="module")
+def load_yml():
+    """Load config.yml file."""
+
+    def load_yml_with_specefic_file(file_path: str):
+        from nameko.cli import setup_config
+
+        with open(file_path, "rb") as file_stream:
+            setup_config(file_stream)
+
+    return load_yml_with_specefic_file
+
+
+@pytest.fixture
+def create_container_with_cluster_rpc_proxy_mock(container_factory, monkeypatch, load_yml):
+    def set_mock(yaml_path, container, dependency_name, *args):
+        load_yml(yaml_path)
+        container = container_factory(container)
+        cluster_rpc = replace_dependencies(container, dependency_name)
+        for dict_mock in args:
+            if isinstance(dict_mock["mocked_response"], Exception):
+                setattr(
+                    getattr(
+                        getattr(cluster_rpc, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "side_effect",
+                    dict_mock["mocked_response"],
+                )
+            elif isfunction(dict_mock["mocked_response"]):
+                setattr(
+                    getattr(cluster_rpc, dict_mock["service_name"]),
+                    dict_mock["function_name"],
+                    dict_mock["mocked_response"],
+                )
+            else:
+                setattr(
+                    getattr(
+                        getattr(cluster_rpc, dict_mock["service_name"]),
+                        dict_mock["function_name"],
+                    ),
+                    "return_value",
+                    dict_mock["mocked_response"],
+                )
+        container.start()
     yield set_mock
