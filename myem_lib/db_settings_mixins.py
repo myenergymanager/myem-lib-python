@@ -19,9 +19,9 @@ DeclarativeBase = declarative_base(cls=Base)
 
 engine_options = {
     "pool_pre_ping": True,
-    "pool_size": 15,
-    "max_overflow": 25,
-    "pool_recycle": 600,
+    # "pool_size": 15,
+    # "max_overflow": 25,
+    # "pool_recycle": 600,
     "connect_args": {
         "connect_timeout": 31536000,
         "keepalives": 1,
