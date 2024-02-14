@@ -1,5 +1,6 @@
 """FastApiSettingsMixin."""
 import json
+import logging
 import os
 from typing import Any
 from urllib.request import urlopen
@@ -136,9 +137,11 @@ class FastApiSettingsMixin:
                 decoded_token = jwt.decode(
                     token, cls.get_public_key(index), audience=audience, algorithms=["RS256"]
                 )
-            except Exception:
+            except Exception as e:
+                logging.warning(f"Could not decode token {e.args[0]}")
                 raise HTTPException(detail="unauthorized", status_code=401) from Exception
-        except Exception:
+        except Exception as e:
+            logging.warning(f"Could not decode token {e.args[0]}")
             raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
         return decoded_token
