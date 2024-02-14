@@ -1,5 +1,6 @@
 """FastApiSettingsMixin."""
 import json
+import logging
 import os
 from typing import Any
 from urllib.request import urlopen
@@ -20,10 +21,15 @@ class RPCValidationException(Exception):
     """RPC Validation Exception."""
 
 
+with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+    public_key_web_content = json.loads(f.read())["keys"]
+
+
 class FastApiSettingsMixin:
     """FastApi settings mixin."""
 
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+    public_key_web_content = public_key_web_content
 
     @classmethod
     def init_app(cls, app: FastAPI) -> None:
@@ -99,9 +105,8 @@ class FastApiSettingsMixin:
         # fast api or other you can check the same error in this link
         # https://stackoverflow.com/questions/49820173/requests-recursionerror-maximum-recursion-depth-exceeded
         try:
-            with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
-                header_key = json.loads(f.read())["keys"][index]
-                return JWK(**header_key).export_to_pem()
+            header_key = cls.public_key_web_content[index]
+            return JWK(**header_key).export_to_pem()
         except Exception:
             raise HTTPException(detail="Invalid Key", status_code=400) from Exception
 
@@ -109,9 +114,8 @@ class FastApiSettingsMixin:
     def get_private_key(cls, index: int = 0) -> str:
         """Returns a private key from a url contains a decoded header and a token."""
         try:
-            with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
-                header_key = json.loads(f.read())["keys"][index]
-                return JWK(**header_key).export_to_pem(private_key=True, password=None)
+            header_key = cls.public_key_web_content[index]
+            return JWK(**header_key).export_to_pem(private_key=True, password=None)
         except Exception:
             raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
@@ -133,9 +137,11 @@ class FastApiSettingsMixin:
                 decoded_token = jwt.decode(
                     token, cls.get_public_key(index), audience=audience, algorithms=["RS256"]
                 )
-            except Exception:
+            except Exception as e:
+                logging.warning(f"Could not decode token {e.args[0]}")
                 raise HTTPException(detail="unauthorized", status_code=401) from Exception
-        except Exception:
+        except Exception as e:
+            logging.warning(f"Could not decode token {e.args[0]}")
             raise HTTPException(detail="unauthorized", status_code=401) from Exception
 
         return decoded_token
