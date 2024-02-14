@@ -21,8 +21,11 @@ class RPCValidationException(Exception):
     """RPC Validation Exception."""
 
 
-with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
-    public_key_web_content = json.loads(f.read())["keys"]
+public_key_web_content = None
+
+if public_key_url := os.environ["PUBLIC_KEY_URL"] if os.getenv("PUBLIC_KEY_URL") else None:
+    with urlopen(os.environ["PUBLIC_KEY_URL"]) as f:
+        public_key_web_content = json.loads(f.read())["keys"]
 
 
 class FastApiSettingsMixin:
