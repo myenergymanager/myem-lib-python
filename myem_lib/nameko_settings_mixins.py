@@ -9,7 +9,7 @@ from nameko.standalone.rpc import ClusterRpcClient
 class NamekoSettingsMixin:
     """Nameko settings mixin."""
 
-    network_rabbitmq_uri = os.environ["RABBITMQ_URI"]
+    network_rabbitmq_uri = os.environ["RABBITMQ_URI"] if os.getenv("RABBITMQ_URI") else os.environ["RPC_RABBITMQ_URI"]
 
     backbone_rabbitmq_uri = os.getenv("BACKBONE_RABBITMQ_URI")
 
