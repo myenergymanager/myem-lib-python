@@ -1,3 +1,4 @@
+"""NamekoSqlalchemy."""
 from weakref import WeakKeyDictionary
 
 from nameko.extensions import DependencyProvider
@@ -8,6 +9,7 @@ DB_URIS_KEY = 'DB_URIS'
 
 
 class DatabaseSession(DependencyProvider):
+    """DatabaseSession."""
     def __init__(
         self, declarative_base, session_options=None, engine_options=None
     ):
@@ -17,6 +19,7 @@ class DatabaseSession(DependencyProvider):
         self.engine_options = engine_options or {}
 
     def setup(self):
+        """setup."""
         service_name = self.container.service_name
         decl_base_name = self.declarative_base.__name__
         uri_key = '{}:{}'.format(service_name, decl_base_name)
@@ -31,19 +34,23 @@ class DatabaseSession(DependencyProvider):
         self.Session = sessionmaker(bind=self.engine, **self.session_options)
 
     def stop(self):
+        """stop."""
         self.engine.dispose()
         del self.engine
 
     def kill(self):
+        """kill."""
         self.engine.dispose()
         del self.engine
 
     def get_dependency(self, worker_ctx):
+        """Get Dependency."""
         session = self.Session()
         self.sessions[worker_ctx] = session
         return session
 
     def worker_teardown(self, worker_ctx):
+        """Worker Teardown."""
         session = self.sessions.pop(worker_ctx)
         session.close()
 
